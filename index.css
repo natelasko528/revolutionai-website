@@ -2,11 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Iframe form embed styling */
-iframe[id^="inline-"] {
+/* Form embed container - responsive height using viewport units */
+.form-embed-container {
+  position: relative;
+  width: 100%;
+  min-height: 70vh;
+  max-height: 90vh;
+}
+
+/* Form embed iframe - fills container responsively */
+.form-embed-iframe {
   width: 100% !important;
-  min-height: 850px;
-  border: none;
+  height: 100%;
+  min-height: 70vh;
+  border: none !important;
+  border-radius: 12px;
   display: block;
 }
 
@@ -15,9 +25,24 @@ iframe[id^="inline-"] {
   overflow: visible !important;
 }
 
-/* Mobile responsive iframe height */
+/* Mobile responsive - taller on small screens for form fields */
 @media (max-width: 640px) {
-  iframe[id^="inline-"] {
-    min-height: 950px;
+  .form-embed-container {
+    min-height: 85vh;
+  }
+
+  .form-embed-iframe {
+    min-height: 85vh;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .form-embed-container {
+    min-height: 75vh;
+  }
+
+  .form-embed-iframe {
+    min-height: 75vh;
   }
 }
