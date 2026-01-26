@@ -538,7 +538,7 @@ export default function RevolutionAILanding() {
       {/* Contact / Lead Capture */}
       <section id="contact" className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-12 items-start">
             <div>
               <div className="text-sm uppercase tracking-wider mb-2" style={{ color: colors.gold }}>Get Started</div>
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">Ready to Stop Losing Leads?</h2>
@@ -552,7 +552,7 @@ export default function RevolutionAILanding() {
                 ))}
               </div>
             </div>
-            <div className="card rounded-3xl p-8 glow-cyan">
+            <div className="card rounded-3xl p-4 sm:p-6 md:p-8 glow-cyan overflow-visible">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex items-center justify-center shrink-0" style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${colors.border}` }}>
                   <img src={LOGO_SRC} alt="RevolutionAI" className="w-full h-full object-contain" />
