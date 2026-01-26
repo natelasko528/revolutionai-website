@@ -18,6 +18,7 @@ export default function RevolutionAILanding() {
   const [openFaq, setOpenFaq] = useState(null);
   const [selectedIndustry, setSelectedIndustry] = useState(null);
   const [industryDropdownOpen, setIndustryDropdownOpen] = useState(false);
+  const [iframeHeight, setIframeHeight] = useState(1200);
   const [calcValues, setCalcValues] = useState({
     monthlyLeads: 50,
     closeRate: 25,
@@ -90,6 +91,41 @@ export default function RevolutionAILanding() {
       if (industry) setCalcValues(prev => ({ ...prev, avgTicket: industry.avgTicket }));
     }
   }, [selectedIndustry]);
+
+  // Load GoHighLevel form embed script and handle iframe auto-resize
+  useEffect(() => {
+    // Load the form embed script
+    const script = document.createElement('script');
+    script.src = 'https://link.msgsndr.com/js/form_embed.js';
+    script.async = true;
+    document.body.appendChild(script);
+
+    // Listen for resize messages from the iframe
+    const handleMessage = (event) => {
+      // Accept messages from GoHighLevel domains
+      if (event.origin.includes('leadconnectorhq.com') || event.origin.includes('msgsndr.com')) {
+        try {
+          const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+          if (data.type === 'resize' || data.height) {
+            const newHeight = data.height || data.size?.height;
+            if (newHeight && newHeight > 100) {
+              setIframeHeight(newHeight + 50); // Add padding
+            }
+          }
+        } catch (e) {
+          // Not a JSON message or not for us
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      const existingScript = document.querySelector('script[src="https://link.msgsndr.com/js/form_embed.js"]');
+      if (existingScript) existingScript.remove();
+    };
+  }, []);
 
   const scrollTo = (id) => { 
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }); 
@@ -506,10 +542,10 @@ export default function RevolutionAILanding() {
                 </div>
                 <div><div className="font-bold">Revolution<span style={{ color: colors.cyan }}>AI</span></div><div className="text-xs" style={{ color: colors.textMuted }}>Free Automation Audit</div></div>
               </div>
-              <div className="w-full" style={{ minHeight: "1150px" }}>
+              <div className="w-full" style={{ minHeight: `${iframeHeight}px` }}>
                 <iframe
                   src="https://api.leadconnectorhq.com/widget/form/2aMmnobuUyI2iG1fB1v9"
-                  style={{ width: "100%", height: "1150px", border: "none", borderRadius: "12px" }}
+                  style={{ width: "100%", height: `${iframeHeight}px`, border: "none", borderRadius: "12px" }}
                   id="inline-2aMmnobuUyI2iG1fB1v9"
                   data-layout="{'id':'INLINE'}"
                   data-trigger-type="alwaysShow"
@@ -519,12 +555,13 @@ export default function RevolutionAILanding() {
                   data-deactivation-type="neverDeactivate"
                   data-deactivation-value=""
                   data-form-name="Form 0"
-                  data-height="1150"
+                  data-height={iframeHeight}
                   data-layout-iframe-id="inline-2aMmnobuUyI2iG1fB1v9"
                   data-form-id="2aMmnobuUyI2iG1fB1v9"
                   title="Form 0"
                   className="w-full"
                   allow="clipboard-read; clipboard-write"
+                  scrolling="no"
                 />
               </div>
             </div>

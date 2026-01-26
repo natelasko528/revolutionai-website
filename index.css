@@ -2,17 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Iframe form embed styling */
+/* Iframe form embed styling - auto-resize enabled */
 iframe[id^="inline-"] {
   width: 100% !important;
-  min-height: 1150px;
   border: none;
   display: block;
-}
-
-/* Mobile responsive iframe height */
-@media (max-width: 640px) {
-  iframe[id^="inline-"] {
-    min-height: 1250px;
-  }
+  transition: height 0.3s ease;
 }
