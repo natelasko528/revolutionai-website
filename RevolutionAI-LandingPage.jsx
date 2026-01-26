@@ -26,6 +26,7 @@ export default function RevolutionAILanding() {
     missedCallPercent: 30,
     responseTime: 24
   });
+  const [iframeHeight, setIframeHeight] = useState(1028);
 
   const colors = {
     bg: "#070C18",
@@ -104,6 +105,42 @@ export default function RevolutionAILanding() {
       if (existingScript) {
         existingScript.remove();
       }
+    };
+  }, []);
+
+  useEffect(() => {
+    // Calculate dynamic iframe height based on viewport size
+    const calculateIframeHeight = () => {
+      const width = window.innerWidth;
+      // Mobile devices (< 768px): Need more height for stacked form fields
+      if (width < 768) {
+        setIframeHeight(1800); // Extra height for mobile to prevent internal scrolling
+      }
+      // Tablet devices (768px - 1024px): Medium height
+      else if (width < 1024) {
+        setIframeHeight(1400);
+      }
+      // Desktop (> 1024px): Standard height
+      else {
+        setIframeHeight(1028);
+      }
+    };
+
+    // Set initial height
+    calculateIframeHeight();
+
+    // Update on window resize with debounce for performance
+    let resizeTimeout;
+    const handleResize = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(calculateIframeHeight, 150);
+    };
+
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(resizeTimeout);
     };
   }, []);
 
@@ -522,10 +559,10 @@ export default function RevolutionAILanding() {
                 </div>
                 <div><div className="font-bold">Revolution<span style={{ color: colors.cyan }}>AI</span></div><div className="text-xs" style={{ color: colors.textMuted }}>Free Automation Audit</div></div>
               </div>
-              <div className="w-full overflow-hidden" style={{ minHeight: "1028px", maxHeight: "1200px" }}>
+              <div className="w-full overflow-hidden" style={{ minHeight: `${iframeHeight}px` }}>
                 <iframe
                   src="https://api.leadconnectorhq.com/widget/form/2aMmnobuUyI2iG1fB1v9"
-                  style={{ width: "100%", height: "1028px", border: "none", borderRadius: "12px" }}
+                  style={{ width: "100%", height: `${iframeHeight}px`, border: "none", borderRadius: "12px" }}
                   id="inline-2aMmnobuUyI2iG1fB1v9"
                   data-layout="{'id':'INLINE'}"
                   data-trigger-type="alwaysShow"
@@ -535,7 +572,7 @@ export default function RevolutionAILanding() {
                   data-deactivation-type="neverDeactivate"
                   data-deactivation-value=""
                   data-form-name="Form 0"
-                  data-height="1028"
+                  data-height={iframeHeight}
                   data-layout-iframe-id="inline-2aMmnobuUyI2iG1fB1v9"
                   data-form-id="2aMmnobuUyI2iG1fB1v9"
                   title="Form 0"
