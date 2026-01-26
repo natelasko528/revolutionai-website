@@ -561,7 +561,6 @@ export default function RevolutionAILanding() {
                   title="Form 0"
                   className="w-full"
                   allow="clipboard-read; clipboard-write"
-                  scrolling="no"
                 />
               </div>
             </div>
