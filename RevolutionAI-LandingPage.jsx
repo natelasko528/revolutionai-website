@@ -18,7 +18,6 @@ export default function RevolutionAILanding() {
   const [openFaq, setOpenFaq] = useState(null);
   const [selectedIndustry, setSelectedIndustry] = useState(null);
   const [industryDropdownOpen, setIndustryDropdownOpen] = useState(false);
-  const [iframeHeight, setIframeHeight] = useState(1200);
   const [calcValues, setCalcValues] = useState({
     monthlyLeads: 50,
     closeRate: 25,
@@ -91,41 +90,6 @@ export default function RevolutionAILanding() {
       if (industry) setCalcValues(prev => ({ ...prev, avgTicket: industry.avgTicket }));
     }
   }, [selectedIndustry]);
-
-  // Load GoHighLevel form embed script and handle iframe auto-resize
-  useEffect(() => {
-    // Load the form embed script
-    const script = document.createElement('script');
-    script.src = 'https://link.msgsndr.com/js/form_embed.js';
-    script.async = true;
-    document.body.appendChild(script);
-
-    // Listen for resize messages from the iframe
-    const handleMessage = (event) => {
-      // Accept messages from GoHighLevel domains
-      if (event.origin.includes('leadconnectorhq.com') || event.origin.includes('msgsndr.com')) {
-        try {
-          const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-          if (data.type === 'resize' || data.height) {
-            const newHeight = data.height || data.size?.height;
-            if (newHeight && newHeight > 100) {
-              setIframeHeight(newHeight + 50); // Add padding
-            }
-          }
-        } catch (e) {
-          // Not a JSON message or not for us
-        }
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-
-    return () => {
-      window.removeEventListener('message', handleMessage);
-      const existingScript = document.querySelector('script[src="https://link.msgsndr.com/js/form_embed.js"]');
-      if (existingScript) existingScript.remove();
-    };
-  }, []);
 
   const scrollTo = (id) => { 
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }); 
@@ -535,18 +499,24 @@ export default function RevolutionAILanding() {
                 ))}
               </div>
             </div>
-            <div className="card rounded-3xl p-4 sm:p-6 md:p-8 glow-cyan">
+            <div className="card rounded-3xl p-4 sm:p-6 md:p-8 glow-cyan overflow-visible">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex items-center justify-center shrink-0" style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${colors.border}` }}>
                   <img src={LOGO_SRC} alt="RevolutionAI" className="w-full h-full object-contain" />
                 </div>
                 <div><div className="font-bold">Revolution<span style={{ color: colors.cyan }}>AI</span></div><div className="text-xs" style={{ color: colors.textMuted }}>Free Automation Audit</div></div>
               </div>
-              <div className="w-full" style={{ minHeight: `${iframeHeight}px` }}>
+              {/* Embedded Form Container */}
+              <div className="w-full overflow-visible" style={{ minHeight: '850px' }}>
                 <iframe
-                  src="https://api.leadconnectorhq.com/widget/form/2aMmnobuUyI2iG1fB1v9"
-                  style={{ width: "100%", height: `${iframeHeight}px`, border: "none", borderRadius: "12px" }}
-                  id="inline-2aMmnobuUyI2iG1fB1v9"
+                  src="https://api.leadconnectorhq.com/widget/form/1gXMXzLMhBDgPVjxwVxu"
+                  style={{
+                    width: '100%',
+                    height: '850px',
+                    border: 'none',
+                    borderRadius: '12px'
+                  }}
+                  id="inline-1gXMXzLMhBDgPVjxwVxu"
                   data-layout="{'id':'INLINE'}"
                   data-trigger-type="alwaysShow"
                   data-trigger-value=""
@@ -554,13 +524,11 @@ export default function RevolutionAILanding() {
                   data-activation-value=""
                   data-deactivation-type="neverDeactivate"
                   data-deactivation-value=""
-                  data-form-name="Form 0"
-                  data-height={iframeHeight}
-                  data-layout-iframe-id="inline-2aMmnobuUyI2iG1fB1v9"
-                  data-form-id="2aMmnobuUyI2iG1fB1v9"
-                  title="Form 0"
-                  className="w-full"
-                  allow="clipboard-read; clipboard-write"
+                  data-form-name="RevolutionAI - Lead Form"
+                  data-height="850"
+                  data-layout-iframe-id="inline-1gXMXzLMhBDgPVjxwVxu"
+                  data-form-id="1gXMXzLMhBDgPVjxwVxu"
+                  title="RevolutionAI - Lead Form"
                   scrolling="no"
                 />
               </div>
