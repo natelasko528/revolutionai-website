@@ -1,3 +1,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Iframe form embed styling - auto-resize enabled */
+iframe[id^="inline-"] {
+  width: 100% !important;
+  border: none;
+  display: block;
+  transition: height 0.3s ease;
+}
