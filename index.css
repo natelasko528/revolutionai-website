@@ -2,18 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Iframe form embed styling - auto-resize enabled with min-height fallback */
+/* Iframe form embed styling */
 iframe[id^="inline-"] {
   width: 100% !important;
-  min-height: 1150px;
+  min-height: 850px;
   border: none;
   display: block;
-  transition: height 0.3s ease;
+}
+
+/* Ensure form container doesn't clip content */
+#contact .card {
+  overflow: visible !important;
 }
 
 /* Mobile responsive iframe height */
 @media (max-width: 640px) {
   iframe[id^="inline-"] {
-    min-height: 1250px;
+    min-height: 950px;
   }
 }
