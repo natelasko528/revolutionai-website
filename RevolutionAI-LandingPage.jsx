@@ -91,6 +91,22 @@ export default function RevolutionAILanding() {
     }
   }, [selectedIndustry]);
 
+  useEffect(() => {
+    // Load GoHighLevel form embed script
+    const script = document.createElement('script');
+    script.src = 'https://link.msgsndr.com/js/form_embed.js';
+    script.async = true;
+    document.body.appendChild(script);
+    
+    return () => {
+      // Cleanup: remove script on unmount if needed
+      const existingScript = document.querySelector('script[src="https://link.msgsndr.com/js/form_embed.js"]');
+      if (existingScript) {
+        existingScript.remove();
+      }
+    };
+  }, []);
+
   const scrollTo = (id) => { 
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }); 
     setNavOpen(false); 
@@ -506,35 +522,27 @@ export default function RevolutionAILanding() {
                 </div>
                 <div><div className="font-bold">Revolution<span style={{ color: colors.cyan }}>AI</span></div><div className="text-xs" style={{ color: colors.textMuted }}>Free Automation Audit</div></div>
               </div>
-              <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-                <div className="grid grid-cols-2 gap-4">
-                  <div><label className="block text-sm font-medium mb-2">First Name</label><input type="text" placeholder="John" className="w-full px-4 py-3 rounded-xl border bg-transparent focus:outline-none focus:border-white/30" style={{ borderColor: colors.border }} /></div>
-                  <div><label className="block text-sm font-medium mb-2">Last Name</label><input type="text" placeholder="Smith" className="w-full px-4 py-3 rounded-xl border bg-transparent focus:outline-none focus:border-white/30" style={{ borderColor: colors.border }} /></div>
-                </div>
-                <div><label className="block text-sm font-medium mb-2">Email</label><input type="email" placeholder="john@company.com" className="w-full px-4 py-3 rounded-xl border bg-transparent focus:outline-none focus:border-white/30" style={{ borderColor: colors.border }} /></div>
-                <div><label className="block text-sm font-medium mb-2">Phone</label><input type="tel" placeholder="(555) 123-4567" className="w-full px-4 py-3 rounded-xl border bg-transparent focus:outline-none focus:border-white/30" style={{ borderColor: colors.border }} /></div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Industry</label>
-                  <select className="w-full px-4 py-3 rounded-xl border bg-transparent focus:outline-none" style={{ borderColor: colors.border, background: colors.surface }}>
-                    <option value="">Select your industry...</option>
-                    {industries.map(ind => <option key={ind.id} value={ind.id}>{ind.name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Monthly Lead Volume</label>
-                  <select className="w-full px-4 py-3 rounded-xl border bg-transparent focus:outline-none" style={{ borderColor: colors.border, background: colors.surface }}>
-                    <option value="">Select range...</option>
-                    <option value="1-25">1-25 leads/month</option>
-                    <option value="26-50">26-50 leads/month</option>
-                    <option value="51-100">51-100 leads/month</option>
-                    <option value="101-250">101-250 leads/month</option>
-                    <option value="250+">250+ leads/month</option>
-                  </select>
-                </div>
-                <div><label className="block text-sm font-medium mb-2">Biggest Challenge?</label><textarea placeholder="Tell us about your pain points..." rows={3} className="w-full px-4 py-3 rounded-xl border bg-transparent focus:outline-none resize-none" style={{ borderColor: colors.border }} /></div>
-                <button type="submit" className="btn-primary w-full py-4 rounded-xl font-semibold flex items-center justify-center gap-2">Get My Custom Quote <ArrowRight className="w-5 h-5" /></button>
-                <p className="text-center text-xs" style={{ color: colors.textMuted }}>By submitting, you agree to our Terms & Privacy Policy</p>
-              </form>
+              <div className="w-full overflow-hidden" style={{ minHeight: "1028px", maxHeight: "1200px" }}>
+                <iframe
+                  src="https://api.leadconnectorhq.com/widget/form/2aMmnobuUyI2iG1fB1v9"
+                  style={{ width: "100%", height: "1028px", border: "none", borderRadius: "12px" }}
+                  id="inline-2aMmnobuUyI2iG1fB1v9"
+                  data-layout="{'id':'INLINE'}"
+                  data-trigger-type="alwaysShow"
+                  data-trigger-value=""
+                  data-activation-type="alwaysActivated"
+                  data-activation-value=""
+                  data-deactivation-type="neverDeactivate"
+                  data-deactivation-value=""
+                  data-form-name="Form 0"
+                  data-height="1028"
+                  data-layout-iframe-id="inline-2aMmnobuUyI2iG1fB1v9"
+                  data-form-id="2aMmnobuUyI2iG1fB1v9"
+                  title="Form 0"
+                  className="w-full"
+                  allow="clipboard-read; clipboard-write"
+                />
+              </div>
             </div>
           </div>
         </div>
