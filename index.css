@@ -5,19 +5,14 @@
 /* Iframe form embed styling */
 iframe[id^="inline-"] {
   width: 100% !important;
-  min-height: 850px;
+  min-height: 1150px;
   border: none;
   display: block;
-}
-
-/* Ensure form container doesn't clip content */
-#contact .card {
-  overflow: visible !important;
 }
 
 /* Mobile responsive iframe height */
 @media (max-width: 640px) {
   iframe[id^="inline-"] {
-    min-height: 950px;
+    min-height: 1250px;
   }
 }

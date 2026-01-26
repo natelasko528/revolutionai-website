@@ -486,7 +486,7 @@ export default function RevolutionAILanding() {
       <section id="contact" className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-start">
-            <div className="lg:sticky lg:top-32">
+            <div>
               <div className="text-sm uppercase tracking-wider mb-2" style={{ color: colors.gold }}>Get Started</div>
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">Ready to Stop Losing Leads?</h2>
               <p className="text-lg mb-6" style={{ color: colors.textMuted }}>Book your free automation audit and get a personalized ROI projection for your business.</p>
@@ -499,24 +499,18 @@ export default function RevolutionAILanding() {
                 ))}
               </div>
             </div>
-            <div className="card rounded-3xl p-4 sm:p-6 md:p-8 glow-cyan overflow-visible">
+            <div className="card rounded-3xl p-4 sm:p-6 md:p-8 glow-cyan">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex items-center justify-center shrink-0" style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${colors.border}` }}>
                   <img src={LOGO_SRC} alt="RevolutionAI" className="w-full h-full object-contain" />
                 </div>
                 <div><div className="font-bold">Revolution<span style={{ color: colors.cyan }}>AI</span></div><div className="text-xs" style={{ color: colors.textMuted }}>Free Automation Audit</div></div>
               </div>
-              {/* Embedded Form Container */}
-              <div className="w-full overflow-visible" style={{ minHeight: '850px' }}>
+              <div className="w-full" style={{ minHeight: "1150px" }}>
                 <iframe
-                  src="https://api.leadconnectorhq.com/widget/form/1gXMXzLMhBDgPVjxwVxu"
-                  style={{
-                    width: '100%',
-                    height: '850px',
-                    border: 'none',
-                    borderRadius: '12px'
-                  }}
-                  id="inline-1gXMXzLMhBDgPVjxwVxu"
+                  src="https://api.leadconnectorhq.com/widget/form/2aMmnobuUyI2iG1fB1v9"
+                  style={{ width: "100%", height: "1150px", border: "none", borderRadius: "12px" }}
+                  id="inline-2aMmnobuUyI2iG1fB1v9"
                   data-layout="{'id':'INLINE'}"
                   data-trigger-type="alwaysShow"
                   data-trigger-value=""
@@ -524,12 +518,13 @@ export default function RevolutionAILanding() {
                   data-activation-value=""
                   data-deactivation-type="neverDeactivate"
                   data-deactivation-value=""
-                  data-form-name="RevolutionAI - Lead Form"
-                  data-height="850"
-                  data-layout-iframe-id="inline-1gXMXzLMhBDgPVjxwVxu"
-                  data-form-id="1gXMXzLMhBDgPVjxwVxu"
-                  title="RevolutionAI - Lead Form"
-                  scrolling="no"
+                  data-form-name="Form 0"
+                  data-height="1150"
+                  data-layout-iframe-id="inline-2aMmnobuUyI2iG1fB1v9"
+                  data-form-id="2aMmnobuUyI2iG1fB1v9"
+                  title="Form 0"
+                  className="w-full"
+                  allow="clipboard-read; clipboard-write"
                 />
               </div>
             </div>
