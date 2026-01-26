@@ -93,22 +93,6 @@ export default function RevolutionAILanding() {
   }, [selectedIndustry]);
 
   useEffect(() => {
-    // Load GoHighLevel form embed script
-    const script = document.createElement('script');
-    script.src = 'https://link.msgsndr.com/js/form_embed.js';
-    script.async = true;
-    document.body.appendChild(script);
-    
-    return () => {
-      // Cleanup: remove script on unmount if needed
-      const existingScript = document.querySelector('script[src="https://link.msgsndr.com/js/form_embed.js"]');
-      if (existingScript) {
-        existingScript.remove();
-      }
-    };
-  }, []);
-
-  useEffect(() => {
     // Calculate dynamic iframe height based on viewport size
     const calculateIframeHeight = () => {
       const width = window.innerWidth;
