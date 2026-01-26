@@ -485,8 +485,8 @@ export default function RevolutionAILanding() {
       {/* Contact / Lead Capture */}
       <section id="contact" className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
+          <div className="grid lg:grid-cols-2 gap-12 items-start">
+            <div className="lg:sticky lg:top-32">
               <div className="text-sm uppercase tracking-wider mb-2" style={{ color: colors.gold }}>Get Started</div>
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">Ready to Stop Losing Leads?</h2>
               <p className="text-lg mb-6" style={{ color: colors.textMuted }}>Book your free automation audit and get a personalized ROI projection for your business.</p>
@@ -499,42 +499,39 @@ export default function RevolutionAILanding() {
                 ))}
               </div>
             </div>
-            <div className="card rounded-3xl p-8 glow-cyan">
+            <div className="card rounded-3xl p-4 sm:p-6 md:p-8 glow-cyan overflow-visible">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex items-center justify-center shrink-0" style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${colors.border}` }}>
                   <img src={LOGO_SRC} alt="RevolutionAI" className="w-full h-full object-contain" />
                 </div>
                 <div><div className="font-bold">Revolution<span style={{ color: colors.cyan }}>AI</span></div><div className="text-xs" style={{ color: colors.textMuted }}>Free Automation Audit</div></div>
               </div>
-              <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-                <div className="grid grid-cols-2 gap-4">
-                  <div><label className="block text-sm font-medium mb-2">First Name</label><input type="text" placeholder="John" className="w-full px-4 py-3 rounded-xl border bg-transparent focus:outline-none focus:border-white/30" style={{ borderColor: colors.border }} /></div>
-                  <div><label className="block text-sm font-medium mb-2">Last Name</label><input type="text" placeholder="Smith" className="w-full px-4 py-3 rounded-xl border bg-transparent focus:outline-none focus:border-white/30" style={{ borderColor: colors.border }} /></div>
-                </div>
-                <div><label className="block text-sm font-medium mb-2">Email</label><input type="email" placeholder="john@company.com" className="w-full px-4 py-3 rounded-xl border bg-transparent focus:outline-none focus:border-white/30" style={{ borderColor: colors.border }} /></div>
-                <div><label className="block text-sm font-medium mb-2">Phone</label><input type="tel" placeholder="(555) 123-4567" className="w-full px-4 py-3 rounded-xl border bg-transparent focus:outline-none focus:border-white/30" style={{ borderColor: colors.border }} /></div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Industry</label>
-                  <select className="w-full px-4 py-3 rounded-xl border bg-transparent focus:outline-none" style={{ borderColor: colors.border, background: colors.surface }}>
-                    <option value="">Select your industry...</option>
-                    {industries.map(ind => <option key={ind.id} value={ind.id}>{ind.name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Monthly Lead Volume</label>
-                  <select className="w-full px-4 py-3 rounded-xl border bg-transparent focus:outline-none" style={{ borderColor: colors.border, background: colors.surface }}>
-                    <option value="">Select range...</option>
-                    <option value="1-25">1-25 leads/month</option>
-                    <option value="26-50">26-50 leads/month</option>
-                    <option value="51-100">51-100 leads/month</option>
-                    <option value="101-250">101-250 leads/month</option>
-                    <option value="250+">250+ leads/month</option>
-                  </select>
-                </div>
-                <div><label className="block text-sm font-medium mb-2">Biggest Challenge?</label><textarea placeholder="Tell us about your pain points..." rows={3} className="w-full px-4 py-3 rounded-xl border bg-transparent focus:outline-none resize-none" style={{ borderColor: colors.border }} /></div>
-                <button type="submit" className="btn-primary w-full py-4 rounded-xl font-semibold flex items-center justify-center gap-2">Get My Custom Quote <ArrowRight className="w-5 h-5" /></button>
-                <p className="text-center text-xs" style={{ color: colors.textMuted }}>By submitting, you agree to our Terms & Privacy Policy</p>
-              </form>
+              {/* Embedded Form Container */}
+              <div className="w-full overflow-visible" style={{ minHeight: '850px' }}>
+                <iframe
+                  src="https://api.leadconnectorhq.com/widget/form/1gXMXzLMhBDgPVjxwVxu"
+                  style={{
+                    width: '100%',
+                    height: '850px',
+                    border: 'none',
+                    borderRadius: '12px'
+                  }}
+                  id="inline-1gXMXzLMhBDgPVjxwVxu"
+                  data-layout="{'id':'INLINE'}"
+                  data-trigger-type="alwaysShow"
+                  data-trigger-value=""
+                  data-activation-type="alwaysActivated"
+                  data-activation-value=""
+                  data-deactivation-type="neverDeactivate"
+                  data-deactivation-value=""
+                  data-form-name="RevolutionAI - Lead Form"
+                  data-height="850"
+                  data-layout-iframe-id="inline-1gXMXzLMhBDgPVjxwVxu"
+                  data-form-id="1gXMXzLMhBDgPVjxwVxu"
+                  title="RevolutionAI - Lead Form"
+                  scrolling="no"
+                />
+              </div>
             </div>
           </div>
         </div>
