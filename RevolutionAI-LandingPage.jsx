@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ArrowRight, Sparkles, Zap, Shield, Clock, BarChart3, Phone, Calendar, Star, 
@@ -543,6 +544,13 @@ export default function RevolutionAILanding() {
                 </div>
                 <div><div className="font-bold">Revolution<span style={{ color: colors.cyan }}>AI</span></div><div className="text-xs" style={{ color: colors.textMuted }}>Free Automation Audit</div></div>
               </div>
+              <p className="text-xs mb-4" style={{ color: colors.textMuted }}>
+                By submitting, you agree to our{" "}
+                <Link to="/privacy" className="underline" style={{ color: colors.cyan }}>Privacy Policy</Link>
+                {" "}and{" "}
+                <Link to="/terms" className="underline" style={{ color: colors.cyan }}>Terms of Service</Link>.
+                Message and data rates may apply for SMS.
+              </p>
               <div className="w-full overflow-hidden" style={{ minHeight: `${iframeHeight}px` }}>
                 <iframe
                   src="https://api.leadconnectorhq.com/widget/form/2aMmnobuUyI2iG1fB1v9"
@@ -579,7 +587,11 @@ export default function RevolutionAILanding() {
             <div><div className="font-bold text-base sm:text-lg">Revolution<span style={{ color: colors.cyan }}>AI</span></div><div className="text-[11px] sm:text-xs" style={{ color: colors.textMuted }}>Automate. Optimize. Thrive.</div></div>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm" style={{ color: colors.textMuted }}>
-            {["Solutions", "ROI Calculator", "FAQ", "Privacy", "Terms"].map((l, i) => (<button key={i} onClick={() => i < 3 ? scrollTo(["solutions", "calculator", "faq"][i]) : null} className="hover:text-white">{l}</button>))}
+            <button onClick={() => scrollTo("solutions")} className="hover:text-white">Solutions</button>
+            <button onClick={() => scrollTo("calculator")} className="hover:text-white">ROI Calculator</button>
+            <button onClick={() => scrollTo("faq")} className="hover:text-white">FAQ</button>
+            <Link to="/privacy" className="hover:text-white" style={{ color: colors.textMuted }}>Privacy Policy</Link>
+            <Link to="/terms" className="hover:text-white" style={{ color: colors.textMuted }}>Terms of Service</Link>
           </div>
           <div className="text-sm" style={{ color: colors.textMuted }}>© {new Date().getFullYear()} RevolutionAI</div>
         </div>
