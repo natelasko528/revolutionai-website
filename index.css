@@ -21,3 +21,5 @@ iframe[id^="inline-"] {
     min-height: 950px;
   }
 }
+
+html { scroll-behavior: smooth; scroll-padding-top: 76px; }

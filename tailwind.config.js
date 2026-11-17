@@ -4,6 +4,8 @@ export default {
     './index.html',
     './main.jsx',
     './RevolutionAI-LandingPage.jsx',
+    './PrivacyPolicy.jsx',
+    './TermsOfService.jsx',
   ],
   theme: {
     extend: {},
