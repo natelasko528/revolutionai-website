@@ -1,9 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { motion, AnimatePresence, useReducedMotion, useScroll, useSpring } from "framer-motion";
+import {
+  motion, AnimatePresence, useReducedMotion, useScroll, useSpring, useTransform,
+  useMotionValue, useMotionValueEvent, useInView, animate,
+} from "framer-motion";
 import {
   PhoneMissed, MessageSquare, PhoneCall, CalendarCheck, Star, Workflow, BarChart3,
-  Menu, X, Plus, Minus, Check, RotateCcw, Voicemail, PhoneOff, Send, BellRing, ChevronLeft, Signal, Wifi, BatteryFull,
+  Menu, X, Plus, Check, RotateCcw, Voicemail, PhoneOff, Send, BellRing,
+  ChevronLeft, Signal, Wifi, BatteryFull, Flame, Droplets, CloudRain,
 } from "lucide-react";
 
 const LOGO_SRC = "/RevolutionAi-Logo-3-cropped%20%281%29.png";
@@ -22,32 +26,61 @@ const c = {
 
 const NAV = [["What we build", "solutions"], ["How it works", "how"], ["Run your numbers", "calculator"], ["Questions", "faq"]];
 
-/* Example conversation shown in the hero phone. Illustrative, not a real customer. */
-const THREAD = [
-  { kind: "event", text: "Missed call · 7:42 PM" },
-  { kind: "out", text: "Hi, this is Northside Heating & Cooling. Sorry we missed you, we're out on a job. What can we help with?" },
-  { kind: "in", text: "Furnace is blowing cold air. Can someone come out tomorrow?" },
-  { kind: "out", text: "We can. I have 8–10 AM or 1–3 PM open tomorrow. Which works better?" },
-  { kind: "in", text: "8–10 works" },
-  { kind: "out", text: "You're booked for tomorrow, 8–10 AM. We'll text a reminder in the morning." },
-  { kind: "booked", text: "Added to the calendar · 7:46 PM" },
+/* Example conversations for the hero phone. Illustrative, not real customers. */
+const SCENARIOS = [
+  {
+    id: "heat", label: "No heat", icon: Flame, who: "Maria R.", initials: "MR", clock: "7:46",
+    thread: [
+      { kind: "event", text: "Missed call · 7:42 PM" },
+      { kind: "out", text: "Hi, thanks for calling. Sorry we missed you, we're out on a job. What can we help with?" },
+      { kind: "in", text: "Furnace is blowing cold air. Can someone come out tomorrow?" },
+      { kind: "out", text: "We can. I have 8–10 AM or 1–3 PM open tomorrow. Which works better?" },
+      { kind: "in", text: "8–10 works" },
+      { kind: "out", text: "You're booked for tomorrow, 8–10 AM. We'll text a reminder in the morning." },
+      { kind: "booked", text: "Added to the calendar · 7:46 PM" },
+    ],
+  },
+  {
+    id: "roof", label: "Roof leak", icon: CloudRain, who: "Dan K.", initials: "DK", clock: "6:19",
+    thread: [
+      { kind: "event", text: "Missed call · 6:15 AM" },
+      { kind: "out", text: "Hi, thanks for calling. We're on a roof right now. What's going on at your place?" },
+      { kind: "in", text: "Water coming through the ceiling after last night's storm" },
+      { kind: "out", text: "Sorry to hear that. Is it an active leak right now, and what's the address?" },
+      { kind: "in", text: "Yes, still dripping. 214 Maple Ct" },
+      { kind: "out", text: "Got it. Marked urgent. A crew lead will call you within the hour, and you're on today's inspection list." },
+      { kind: "booked", text: "Urgent job sent to the owner · 6:19 AM" },
+    ],
+  },
+  {
+    id: "drain", label: "Clogged drain", icon: Droplets, who: "Priya S.", initials: "PS", clock: "12:34",
+    thread: [
+      { kind: "event", text: "Missed call · 12:31 PM" },
+      { kind: "out", text: "Hi, thanks for calling. We're with another customer. How can we help?" },
+      { kind: "in", text: "Kitchen sink is backed up. How soon can you get here?" },
+      { kind: "out", text: "We have an opening today between 3 and 5 PM. Want it?" },
+      { kind: "in", text: "Yes please" },
+      { kind: "out", text: "Done. You're set for today, 3–5 PM. We'll text when the tech is on the way." },
+      { kind: "booked", text: "Added to the calendar · 12:34 PM" },
+    ],
+  },
 ];
 
 const PROOF = [
   {
-    figure: "7×",
+    to: 7, suffix: "×",
     text: "Companies that reached a new web lead within an hour were nearly seven times as likely to qualify it as those that waited one more hour.",
     source: "Harvard Business Review, 2011",
     href: "https://hbr.org/2011/03/the-short-life-of-online-sales-leads",
   },
   {
-    figure: "23%",
+    to: 23, suffix: "%",
     text: "of the 2,241 U.S. companies in that same audit never responded to the lead at all.",
     source: "Harvard Business Review, 2011",
     href: "https://hbr.org/2011/03/the-short-life-of-online-sales-leads",
   },
   {
-    figure: "78%",
+    to: 78, suffix: "%",
     text: "of U.S. consumers say they have walked away from a business after a call went unanswered.",
     source: "CallRail consumer survey, 2025",
   },
@@ -68,6 +101,7 @@ const WITHOUT = [
   { icon: Voicemail, time: "Sat 7:42 PM", text: "Call rings out and goes to voicemail." },
   { icon: PhoneOff, time: "Sat 7:43 PM", text: "The caller dials the next company on the list." },
   { icon: PhoneCall, time: "Mon 9:10 AM", text: "You call back. Someone else already has the job." },
+  { icon: X, time: "After that", text: "You never find out what that job was worth." },
 ];
 const WITH = [
   { icon: Send, time: "Sat 7:42 PM", text: "A text goes out from your number before they've put the phone down." },
@@ -136,46 +170,75 @@ function estimate(v, multiplier) {
   const hoursSaved = Math.round(hoursOnFollowUp * 0.85);
   return {
     hoursSaved,
-    monthlyHoursSaved: hoursSaved * 4,
     fasterReply: responseTime > 1 ? Math.round(((responseTime - 0.5) / responseTime) * 100) : 50,
     recoveredLeads,
     currentRevenue,
     projectedRevenue,
-    additionalRevenue: projectedRevenue - currentRevenue,
     annualImpact: (projectedRevenue - currentRevenue) * 12,
   };
 }
 
 const money = (n) => "$" + Math.round(n).toLocaleString("en-US");
 
-function Vignette({ id }) {
-  if (id === "textback") return (
-    <div className="vg vg-thread" aria-hidden="true">
-      <span className="msg msg-event"><PhoneMissed size={12} />Missed call</span>
-      <span className="msg msg-out">Sorry we missed you. How can we help?</span>
-      <span className="msg msg-in">Need a quote on a new water heater</span>
-      <span className="msg msg-out">Happy to. What's the address?</span>
+/* Fades and lifts a block in the first time it scrolls into view. */
+function Reveal({ children, delay = 0, className, as = "div", ...rest }) {
+  const reduce = useReducedMotion();
+  const M = motion[as];
+  return (
+    <M className={className} {...rest}
+      initial={reduce ? false : { opacity: 0, y: 26, filter: "blur(6px)" }}
+      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      viewport={{ once: true, margin: "0px 0px -12% 0px" }}
+      transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}>
+      {children}
+    </M>
+  );
+}
+
+function CountUp({ to, suffix = "" }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "0px 0px -10% 0px" });
+  const reduce = useReducedMotion();
+  const [v, setV] = useState(reduce ? to : 0);
+  useEffect(() => {
+    if (!inView || reduce) return;
+    const ctl = animate(0, to, { duration: 1.5, ease: "easeOut", onUpdate: (x) => setV(Math.round(x)) });
+    return () => ctl.stop();
+  }, [inView, reduce, to]);
+  return <span ref={ref}>{v}{suffix}</span>;
+}
+
+/* Tweens between values so calculator results roll instead of jumping. */
+function Rolling({ value, format = (x) => Math.round(x).toLocaleString("en-US") }) {
+  const [d, setD] = useState(value);
+  const prev = useRef(value);
+  useEffect(() => {
+    const ctl = animate(prev.current, value, { duration: 0.45, ease: "easeOut", onUpdate: setD });
+    prev.current = value;
+    return () => ctl.stop();
+  }, [value]);
+  return <>{format(d)}</>;
+}
+
+/* Tilts its child toward the pointer. */
+function Tilt({ children, max = 7, className }) {
+  const reduce = useReducedMotion();
+  const rx = useMotionValue(0);
+  const ry = useMotionValue(0);
+  const sx = useSpring(rx, { stiffness: 140, damping: 16 });
+  const sy = useSpring(ry, { stiffness: 140, damping: 16 });
+  const onMove = (e) => {
+    if (reduce || e.pointerType === "touch") return;
+    const r = e.currentTarget.getBoundingClientRect();
+    ry.set(((e.clientX - r.left) / r.width - 0.5) * max * 2);
+    rx.set(-((e.clientY - r.top) / r.height - 0.5) * max * 2);
+  };
+  const onLeave = () => { rx.set(0); ry.set(0); };
+  return (
+    <div className={className} style={{ perspective: 1200 }} onPointerMove={onMove} onPointerLeave={onLeave}>
+      <motion.div style={{ rotateX: sx, rotateY: sy, transformStyle: "preserve-3d" }}>{children}</motion.div>
     </div>
   );
-  if (id === "voice") return (
-    <div className="vg vg-wave" aria-hidden="true">{Array.from({ length: 28 }).map((_, i) => <i key={i} style={{ animationDelay: `${(i % 7) * 0.12}s`, height: `${28 + ((i * 37) % 60)}%` }} />)}</div>
-  );
-  if (id === "booking") return (
-    <div className="vg vg-slots" aria-hidden="true">{["8–10 AM", "10–12", "1–3 PM", "3–5 PM"].map((t, i) => <span key={t} className={i === 0 ? "on" : ""}>{t}</span>)}</div>
-  );
-  if (id === "lead") return (
-    <div className="vg vg-sent" aria-hidden="true"><span><Check size={14} />Text sent</span><span><Check size={14} />Email sent</span></div>
-  );
-  if (id === "reviews") return (
-    <div className="vg vg-stars" aria-hidden="true">{[0, 1, 2, 3, 4].map((i) => <Star key={i} size={20} fill="currentColor" />)}</div>
-  );
-  if (id === "pipeline") return (
-    <div className="vg vg-pipe" aria-hidden="true">{[["New", 3], ["Quoted", 2], ["Booked", 4]].map(([l, n]) => <div key={l}><b>{l}</b>{Array.from({ length: n }).map((_, i) => <i key={i} />)}</div>)}</div>
-  );
-  if (id === "report") return (
-    <div className="vg vg-bars" aria-hidden="true">{[34, 52, 41, 66, 58, 79, 88].map((h, i) => <i key={i} style={{ height: `${h}%` }} />)}</div>
-  );
-  return null;
 }
 
 const spotlight = (e) => {
@@ -184,81 +247,166 @@ const spotlight = (e) => {
   e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
 };
 
+function Vignette({ id }) {
+  const [slot, setSlot] = useState(null);
+  const [stars, setStars] = useState(5);
+  const SLOTS = ["8–10 AM", "10–12", "1–3 PM", "3–5 PM"];
+  const pop = { hidden: { opacity: 0, y: 10, scale: 0.96 }, show: { opacity: 1, y: 0, scale: 1 } };
+  if (id === "textback") return (
+    <motion.div className="vg vg-thread" initial="hidden" whileInView="show" viewport={{ once: true, margin: "0px 0px -15% 0px" }} transition={{ staggerChildren: 0.45 }} aria-hidden="true">
+      <motion.span variants={pop} className="msg msg-event"><PhoneMissed size={12} />Missed call</motion.span>
+      <motion.span variants={pop} className="msg msg-out">Sorry we missed you. How can we help?</motion.span>
+      <motion.span variants={pop} className="msg msg-in">Need a quote on a new water heater</motion.span>
+      <motion.span variants={pop} className="msg msg-out">Happy to. What's the address?</motion.span>
+    </motion.div>
+  );
+  if (id === "voice") return (
+    <div className="vg vg-wave" aria-hidden="true">{Array.from({ length: 28 }).map((_, i) => <i key={i} style={{ animationDelay: `${(i % 7) * 0.12}s`, height: `${28 + ((i * 37) % 60)}%` }} />)}</div>
+  );
+  if (id === "booking") return (
+    <div className="vg">
+      <div className="vg-slots" role="group" aria-label="Try picking a time">
+        {SLOTS.map((t) => <button type="button" key={t} aria-pressed={slot === t} onClick={() => setSlot(slot === t ? null : t)}>{t}</button>)}
+      </div>
+      <p className="vg-note" aria-live="polite">{slot ? <><Check size={14} />Booked for {slot}. Reminder scheduled.</> : "Try it: tap a time."}</p>
+    </div>
+  );
+  if (id === "lead") return (
+    <motion.div className="vg vg-sent" initial="hidden" whileInView="show" viewport={{ once: true }} transition={{ staggerChildren: 0.3, delayChildren: 0.2 }} aria-hidden="true">
+      <motion.span variants={pop}><Check size={14} />Text sent</motion.span>
+      <motion.span variants={pop}><Check size={14} />Email sent</motion.span>
+      <motion.span variants={pop}><Check size={14} />Follow-up queued</motion.span>
+    </motion.div>
+  );
+  if (id === "reviews") return (
+    <div className="vg vg-stars" role="group" aria-label="Try rating">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <motion.button type="button" key={n} aria-label={`${n} star${n > 1 ? "s" : ""}`} aria-pressed={stars >= n} onClick={() => setStars(n)} whileHover={{ scale: 1.25, rotate: -8 }} whileTap={{ scale: 0.9 }}>
+          <Star size={22} fill={stars >= n ? "currentColor" : "none"} />
+        </motion.button>
+      ))}
+    </div>
+  );
+  if (id === "pipeline") return (
+    <div className="vg vg-pipe" aria-hidden="true">
+      {[["New", 2], ["Quoted", 2], ["Booked", 3]].map(([l, n]) => <div key={l}><b>{l}</b>{Array.from({ length: n }).map((_, i) => <i key={i} />)}</div>)}
+      <span className="runner" />
+    </div>
+  );
+  if (id === "report") return (
+    <div className="vg vg-bars" aria-hidden="true">
+      {[34, 52, 41, 66, 58, 79, 88].map((h, i) => (
+        <motion.i key={i} initial={{ height: "6%" }} whileInView={{ height: `${h}%` }} viewport={{ once: true, margin: "0px 0px -10% 0px" }} transition={{ duration: 0.7, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }} />
+      ))}
+    </div>
+  );
+  return null;
+}
+
 function PhoneDemo() {
   const reduce = useReducedMotion();
-  const [shown, setShown] = useState(reduce ? THREAD.length : 1);
+  const [sid, setSid] = useState(SCENARIOS[0].id);
+  const sc = SCENARIOS.find((s) => s.id === sid);
+  const thread = sc.thread;
+  const [shown, setShown] = useState(reduce ? thread.length : 1);
   const scroller = useRef(null);
-  const done = shown >= THREAD.length;
+  const done = shown >= thread.length;
+
+  const pick = (id) => { setSid(id); setShown(reduce ? SCENARIOS.find((s) => s.id === id).thread.length : 1); };
 
   useEffect(() => {
     if (reduce || done) return;
-    const next = THREAD[shown];
-    const delay = next.kind === "in" ? 1900 : next.kind === "out" ? 1500 : 900;
+    const next = thread[shown];
+    const delay = next.kind === "in" ? 1700 : next.kind === "out" ? 1300 : 800;
     const t = setTimeout(() => setShown((s) => s + 1), delay);
     return () => clearTimeout(t);
-  }, [shown, reduce, done]);
+  }, [shown, reduce, done, thread]);
 
   useEffect(() => {
     const el = scroller.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [shown]);
+  }, [shown, sid]);
 
-  const next = THREAD[shown];
+  const next = thread[shown];
   const typing = !done && next && (next.kind === "in" || next.kind === "out");
 
   return (
     <div className="phone-wrap">
-      <div className="phone" role="img" aria-label="Example text conversation: a missed call is answered by text and booked into the calendar four minutes later.">
-        <div className="phone-status">
-          <span>7:46</span>
-          <span className="flex items-center gap-1.5"><Signal size={13} /><Wifi size={13} /><BatteryFull size={16} /></span>
-        </div>
-        <div className="phone-head">
-          <ChevronLeft size={18} style={{ color: c.cyan }} />
-          <div className="phone-avatar">MR</div>
-          <div>
-            <div className="text-[13px] font-semibold leading-tight">Maria R.</div>
-            <div className="text-[11px]" style={{ color: c.muted }}>New caller</div>
-          </div>
-        </div>
-        <div className="phone-thread" ref={scroller}>
-          {THREAD.slice(0, shown).map((m, i) => (
-            <motion.div
-              key={i}
-              initial={reduce ? false : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.28 }}
-              className={`msg msg-${m.kind}`}
-            >
-              {m.kind === "event" && <PhoneMissed size={13} />}
-              {m.kind === "booked" && <CalendarCheck size={13} />}
-              <span>{m.text}</span>
-            </motion.div>
-          ))}
-          {typing && (
-            <div className={`msg msg-${next.kind} typing`} aria-hidden="true"><i /><i /><i /></div>
-          )}
-        </div>
+      <div className="scn" role="group" aria-label="Pick a call to watch">
+        {SCENARIOS.map((s) => (
+          <button type="button" key={s.id} aria-pressed={sid === s.id} onClick={() => pick(s.id)}>
+            {sid === s.id && <motion.span layoutId="scn-pill" className="scn-pill" transition={{ type: "spring", stiffness: 380, damping: 30 }} />}
+            <span className="scn-label"><s.icon size={14} />{s.label}</span>
+          </button>
+        ))}
       </div>
+      <Tilt>
+        <div className="phone-stage">
+          <div className="phone" role="img" aria-label={`Example text conversation for a ${sc.label.toLowerCase()} call: the missed call is answered by text and handled within minutes.`}>
+            <div className="phone-status">
+              <span>{done ? sc.clock : thread[0].text.split("· ")[1].replace(/ [AP]M/, "")}</span>
+              <span className="flex items-center gap-1.5"><Signal size={13} /><Wifi size={13} /><BatteryFull size={16} /></span>
+            </div>
+            <div className="phone-head">
+              <ChevronLeft size={18} style={{ color: c.cyan }} />
+              <div className="phone-avatar">{sc.initials}</div>
+              <div>
+                <div className="text-[13px] font-semibold leading-tight">{sc.who}</div>
+                <div className="text-[11px]" style={{ color: c.muted }}>New caller</div>
+              </div>
+            </div>
+            <div className="phone-thread" ref={scroller}>
+              {thread.slice(0, shown).map((m, i) => (
+                <motion.div key={`${sid}-${i}`} initial={reduce ? false : { opacity: 0, y: 10, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.28 }} className={`msg msg-${m.kind}`}>
+                  {m.kind === "event" && <PhoneMissed size={13} />}
+                  {m.kind === "booked" && <CalendarCheck size={13} />}
+                  <span>{m.text}</span>
+                </motion.div>
+              ))}
+              {typing && <div className={`msg msg-${next.kind} typing`} aria-hidden="true"><i /><i /><i /></div>}
+            </div>
+          </div>
+          <span className="chip-float chip-a" aria-hidden="true"><Send size={13} />Texted back in seconds</span>
+          <AnimatePresence>
+            {done && (
+              <motion.span className="chip-float chip-b" aria-hidden="true" initial={{ opacity: 0, scale: 0.8, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ type: "spring", stiffness: 300, damping: 18 }}>
+                <Check size={13} />Handled without you
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </div>
+      </Tilt>
       <div className="phone-caption">
-        <span>Example conversation. Yours uses your business name and your wording.</span>
-        <button type="button" onClick={() => setShown(1)} className="replay" disabled={!done && !reduce}>
-          <RotateCcw size={13} /> Replay
-        </button>
+        <span>Example conversations. Yours use your business name and your wording.</span>
+        <button type="button" onClick={() => setShown(1)} className="replay" disabled={!done && !reduce}><RotateCcw size={13} /> Replay</button>
       </div>
     </div>
   );
 }
 
 export default function RevolutionAILanding() {
+  const reduce = useReducedMotion();
   const [navOpen, setNavOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState(0);
   const [industryId, setIndustryId] = useState("");
   const [vals, setVals] = useState({ monthlyLeads: 50, closeRate: 25, avgTicket: 2500, hoursOnFollowUp: 15, missedCallPercent: 30, responseTime: 24 });
   const [iframeHeight, setIframeHeight] = useState(1028);
   const [stickyCta, setStickyCta] = useState(false);
-  const { scrollYProgress } = useScroll();
+  const [mode, setMode] = useState("without");
+  const [step, setStep] = useState(0);
+
+  const { scrollY, scrollYProgress } = useScroll();
   const progress = useSpring(scrollYProgress, { stiffness: 140, damping: 28, mass: 0.3 });
+  const heroY = useTransform(scrollY, [0, 800], [0, reduce ? 0 : 140]);
+
+  const flowRef = useRef(null);
+  const { scrollYProgress: flowP } = useScroll({ target: flowRef, offset: ["start 78%", "end 62%"] });
+  const flowFill = useSpring(flowP, { stiffness: 120, damping: 26 });
+  useMotionValueEvent(flowP, "change", (v) => setStep(Math.min(STEPS.length - 1, Math.floor(v * STEPS.length * 1.02))));
+
+  const shotRef = useRef(null);
+  const { scrollYProgress: shotP } = useScroll({ target: shotRef, offset: ["start end", "end start"] });
+  const shotY = useTransform(shotP, [0, 1], reduce ? ["0%", "0%"] : ["-7%", "7%"]);
 
   useEffect(() => {
     const onScroll = () => {
@@ -296,6 +444,11 @@ export default function RevolutionAILanding() {
 
   const industry = INDUSTRIES.find((i) => i.id === industryId);
   const roi = estimate(vals, industry?.multiplier || 1.2);
+  const nowPct = roi.projectedRevenue > 0 ? Math.max(4, (roi.currentRevenue / roi.projectedRevenue) * 100) : 4;
+  const lane = mode === "with" ? WITH : WITHOUT;
+  const words = (text, start) => text.split(" ").map((w, i) => (
+    <span className="word" key={w + i}><motion.span initial={reduce ? false : { y: "110%" }} animate={{ y: 0 }} transition={{ duration: 0.7, delay: 0.08 * (start + i), ease: [0.22, 1, 0.36, 1] }}>{w}</motion.span></span>
+  ));
 
   return (
     <div className="site min-h-screen">
@@ -414,15 +567,96 @@ export default function RevolutionAILanding() {
         .footer-plate { background: linear-gradient(180deg, #E9F0F5 0%, #CBD8E2 55%, #AEBFCD 100%); border-top: 1px solid #7F96AA; box-shadow: inset 0 1px 0 #fff, inset 0 -18px 30px -18px rgba(40,70,100,.35); }
         .footer-plate img { border-radius: 26px; box-shadow: 0 0 0 1px #8FA6B8, 0 0 0 6px #EEF3F7, 0 0 0 7px #9DB1C2, 0 18px 40px -18px rgba(20,45,70,.7); }
         @media (prefers-reduced-motion: reduce) { .site * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+        @property --ang { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+        @keyframes spin-ang { to { --ang: 360deg; } }
+        .orbit { position: relative; }
+        .orbit::after { content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1.5px; pointer-events: none;
+          background: conic-gradient(from var(--ang), transparent 0 62%, ${c.cyan} 80%, ${c.gold} 94%, transparent 100%);
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+          animation: spin-ang 6s linear infinite; }
+        .tile.orbit::after { inset: 0; opacity: 0; transition: opacity .3s; } .tile.orbit:hover::after { opacity: 1; }
+        .btn-main { position: relative; overflow: hidden; }
+        .btn-main::after { content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; transform: skewX(-20deg); background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); transition: left .55s ease; }
+        .btn-main:hover::after { left: 130%; }
+        .aurora { position: absolute; inset: -20% -10% auto -10%; height: 120%; pointer-events: none; filter: blur(70px); opacity: .55; }
+        .aurora i { position: absolute; border-radius: 50%; }
+        .aurora i:nth-child(1) { width: 46%; height: 60%; right: 2%; top: 14%; background: rgba(77,212,231,.42); animation: drift 14s ease-in-out infinite alternate; }
+        .aurora i:nth-child(2) { width: 34%; height: 46%; right: 22%; top: 46%; background: rgba(245,166,35,.22); animation: drift 18s ease-in-out infinite alternate-reverse; }
+        @keyframes drift { from { transform: translate3d(-6%, -4%, 0) scale(1); } to { transform: translate3d(8%, 6%, 0) scale(1.18); } }
+        .hero h1 .word { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .12em; margin-bottom: -.12em; margin-right: .26em; }
+        .hero h1 .word > span { display: inline-block; }
+        .hero h1 em .word > span { color: ${c.gold}; }
+        .scn { display: flex; gap: 4px; padding: 4px; margin: 0 auto 18px; width: fit-content; max-width: 100%; border-radius: 999px; background: rgba(7,12,24,.7); border: 1px solid rgba(255,255,255,.14); backdrop-filter: blur(10px); }
+        .scn button { position: relative; padding: 8px 13px; border-radius: 999px; font-size: .82rem; font-weight: 600; color: ${c.muted}; white-space: nowrap; }
+        .scn button[aria-pressed="true"] { color: #04121A; }
+        .scn-pill { position: absolute; inset: 0; border-radius: 999px; background: ${c.cyan}; }
+        .scn-label { position: relative; display: inline-flex; align-items: center; gap: 6px; }
+        .phone-stage { position: relative; transform-style: preserve-3d; }
+        .chip-float { position: absolute; display: none; align-items: center; gap: 6px; padding: 9px 14px; border-radius: 999px; font-size: .8rem; font-weight: 600; white-space: nowrap; background: rgba(14,23,43,.92); border: 1px solid rgba(255,255,255,.16); box-shadow: 0 18px 40px -16px rgba(0,0,0,.9); transform: translateZ(60px); }
+        @media (min-width: 1024px) { .chip-float { display: inline-flex; } }
+        .chip-a { left: -128px; top: 150px; color: ${c.cyan}; animation: bob 5s ease-in-out infinite; }
+        .chip-b { right: -74px; bottom: 74px; color: ${c.gold}; }
+        @keyframes bob { 0%, 100% { margin-top: 0; } 50% { margin-top: -10px; } }
+        .ticker { overflow: hidden; border-bottom: 1px solid ${c.line}; -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
+        .ticker-track { display: flex; width: max-content; gap: 44px; padding: 18px 0; animation: slide 46s linear infinite; }
+        .ticker:hover .ticker-track { animation-play-state: paused; }
+        .ticker span { display: inline-flex; align-items: center; gap: 44px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.05rem; color: rgba(244,247,251,.55); white-space: nowrap; }
+        .ticker span::after { content: ""; width: 6px; height: 6px; border-radius: 50%; background: ${c.gold}; }
+        @keyframes slide { to { transform: translateX(-50%); } }
+        .proof .fig { font-variant-numeric: tabular-nums; }
+        .switch { display: inline-flex; padding: 5px; border-radius: 999px; border: 1px solid rgba(255,255,255,.16); background: ${c.surface}; }
+        .switch button { position: relative; padding: 11px 20px; border-radius: 999px; font-weight: 600; font-size: .95rem; color: ${c.muted}; }
+        .switch button[aria-pressed="true"] { color: #04121A; }
+        .switch .pill { position: absolute; inset: 0; border-radius: 999px; }
+        .switch .lbl { position: relative; }
+        .rail { position: relative; margin-top: 26px; padding: 24px 22px; border-radius: 20px; border: 1px solid ${c.line}; background: ${c.surface}; min-height: 318px; transition: border-color .4s, background .4s; }
+        .rail.on { border-color: rgba(77,212,231,.5); background: linear-gradient(180deg, rgba(77,212,231,.1), ${c.surface} 65%); }
+        .rail ol { display: grid; gap: 18px; }
+        .rail li { display: grid; grid-template-columns: 38px 1fr; gap: 14px; align-items: start; }
+        .rail .dot { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: rgba(255,120,100,.12); color: #FF9A8B; }
+        .rail.on .dot { background: rgba(77,212,231,.14); color: ${c.cyan}; }
+        .rail time { display: block; font-size: .8rem; font-weight: 700; color: #C8D0DC; font-variant-numeric: tabular-nums; }
+        .rail.on time { color: ${c.gold}; }
+        .rail p { font-size: 1rem; line-height: 1.45; }
+        .shot img { top: -8%; height: 116%; }
+        .vg-slots button { text-align: center; padding: 11px 6px; border-radius: 12px; font-size: .86rem; font-weight: 600; border: 1px solid rgba(255,255,255,.14); color: ${c.muted}; transition: background .15s, color .15s, border-color .15s, transform .15s; }
+        .vg-slots button:hover { border-color: ${c.cyan}; color: ${c.text}; transform: translateY(-1px); }
+        .vg-slots button[aria-pressed="true"] { background: ${c.cyan}; border-color: ${c.cyan}; color: #04121A; }
+        .vg-note { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: .8rem; font-weight: 600; color: ${c.cyan}; min-height: 1.4em; }
+        .vg-stars button { color: ${c.gold}; display: grid; }
+        .vg-pipe { position: relative; }
+        .vg-pipe .runner { position: absolute; left: 0; top: 22px; width: calc((100% - 16px) / 3); height: 9px; border-radius: 4px; background: ${c.gold}; animation: run 4.5s ease-in-out infinite; }
+        @keyframes run { 0%, 18% { transform: translateX(0); opacity: 0; } 24% { opacity: 1; } 40%, 52% { transform: translateX(calc(100% + 8px)); } 74%, 90% { transform: translateX(calc(200% + 16px)); opacity: 1; } 100% { transform: translateX(calc(200% + 16px)); opacity: 0; } }
+        .flowwrap { position: relative; } .flow { display: grid; gap: 14px; }
+        @media (min-width: 900px) { .flow { grid-template-columns: repeat(4, 1fr); gap: 18px; padding-top: 34px; } }
+        .flow-track { position: absolute; background: rgba(255,255,255,.1); border-radius: 2px; overflow: hidden; left: 35px; top: 0; bottom: 0; width: 2px; }
+        .flow-track > div { width: 100%; height: 100%; background: linear-gradient(180deg, ${c.cyan}, ${c.gold}); transform-origin: 50% 0; }
+        @media (min-width: 900px) { .flow-track { left: 0; right: 0; top: 0; bottom: auto; width: auto; height: 2px; } .flow-track > div { background: linear-gradient(90deg, ${c.cyan}, ${c.gold}); transform-origin: 0 50%; } }
+        .flow li { position: relative; padding: 22px 22px 24px 72px; border-radius: 20px; border: 1px solid transparent; transition: background .35s, border-color .35s, opacity .35s, transform .35s; opacity: .5; }
+        @media (min-width: 900px) { .flow li { padding: 26px 22px; } }
+        .flow li.lit { opacity: 1; background: ${c.surface}; border-color: rgba(77,212,231,.35); }
+        @media (min-width: 900px) { .flow li.lit { transform: translateY(-4px); } }
+        .flow .num { position: absolute; left: 14px; top: 20px; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-family: 'Syne', sans-serif; font-weight: 700; background: ${c.bg}; border: 2px solid rgba(255,255,255,.2); color: ${c.muted}; transition: background .35s, color .35s, border-color .35s, box-shadow .35s; }
+        @media (min-width: 900px) { .flow .num { position: static; margin-bottom: 18px; } }
+        .flow li.lit .num { background: ${c.cyan}; border-color: ${c.cyan}; color: #04121A; box-shadow: 0 0 0 6px rgba(77,212,231,.16); }
+        .site input[type="range"]::-webkit-slider-runnable-track { background: linear-gradient(90deg, ${c.cyan} var(--p, 0%), rgba(255,255,255,.12) var(--p, 0%)); }
+        .site input[type="range"]::-moz-range-progress { height: 6px; background: ${c.cyan}; border-radius: 3px; }
+        .cmp { display: grid; gap: 10px; margin-top: 22px; }
+        .cmp-row { display: grid; grid-template-columns: 92px 1fr; align-items: center; gap: 12px; font-size: .82rem; color: ${c.muted}; }
+        .cmp-bar { height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: flex-end; padding: 0 10px; font-weight: 700; font-size: .82rem; font-variant-numeric: tabular-nums; white-space: nowrap; min-width: 86px; }
+        .cmp-now { background: rgba(255,255,255,.12); color: ${c.text}; }
+        .cmp-new { background: linear-gradient(90deg, ${c.cyan}, ${c.gold}); color: #04121A; }
+        .faq-item { transition: background .25s; border-radius: 14px; }
+        .faq-item:hover { background: rgba(255,255,255,.03); }
+        .faq-plus { transition: transform .3s ease, color .3s; }
+        .faq-item.open .faq-plus { transform: rotate(135deg); color: ${c.cyan}; }
       `}</style>
 
       {/* Header */}
       <header className="sticky top-0 z-50 backdrop-blur-xl" style={{ background: "rgba(7,12,24,.86)", borderBottom: `1px solid ${c.line}` }}>
         <div className="wrap flex items-center justify-between h-16">
           <a href="#top" className="flex items-center gap-3" aria-label="RevolutionAI home">
-            <span className="w-11 h-11 shrink-0">
-              <img src="/apple-touch-icon.png" alt="" width="44" height="44" className="w-full h-full object-contain" />
-            </span>
+            <span className="w-11 h-11 shrink-0"><img src="/apple-touch-icon.png" alt="" width="44" height="44" className="w-full h-full object-contain" /></span>
             <span className="display font-bold text-lg">Revolution<span style={{ color: c.cyan }}>AI</span></span>
           </a>
           <nav className="hidden md:flex items-center gap-1" aria-label="Main">
@@ -454,41 +688,55 @@ export default function RevolutionAILanding() {
       <main id="top">
         {/* Hero */}
         <section className="hero">
-          <div className="hero-photo" aria-hidden="true" />
-          <div className="wrap relative grid grid-cols-1 lg:grid-cols-[1.15fr_.85fr] gap-14 items-center" style={{ paddingTop: 64, paddingBottom: 80 }}>
+          <motion.div className="hero-photo" aria-hidden="true" style={{ y: heroY }} />
+          <div className="aurora" aria-hidden="true"><i /><i /></div>
+          <div className="wrap relative grid grid-cols-1 lg:grid-cols-[1.15fr_.85fr] gap-14 items-center" style={{ paddingTop: 56, paddingBottom: 76 }}>
             <div>
-              <p className="text-sm font-semibold mb-5" style={{ color: c.cyan }}>Done-for-you AI follow-up for home service businesses</p>
-              <h1>The missed call that <em>booked itself.</em></h1>
-              <p className="lede mt-7">
-                You're on a roof, under a sink or in an attic. RevolutionAI answers anyway: it texts back every missed call in seconds, qualifies the lead, puts the job on your calendar and asks for the review afterward. We build it and run it for you.
-              </p>
-              <div className="mt-9 flex flex-wrap gap-3">
-                <button onClick={() => scrollTo("contact")} className="btn btn-main">Book a free audit</button>
-                <button onClick={() => scrollTo("calculator")} className="btn btn-ghost">Run your numbers</button>
-              </div>
-              <ul className="facts mt-9">
-                {["No long-term contract", "Live in 5–7 business days", "Built and managed for you"].map((f) => (
-                  <li key={f}><Check size={16} style={{ color: c.cyan }} />{f}</li>
-                ))}
-              </ul>
+              <motion.p initial={reduce ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="text-sm font-semibold mb-5" style={{ color: c.cyan }}>Done-for-you AI follow-up for home service businesses</motion.p>
+              <h1 aria-label="The missed call that booked itself.">
+                <span aria-hidden="true">{words("The missed call that", 0)}<em>{words("booked itself.", 4)}</em></span>
+              </h1>
+              <motion.div initial={reduce ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.55 }}>
+                <p className="lede mt-7">
+                  You're on a roof, under a sink or in an attic. RevolutionAI answers anyway: it texts back every missed call in seconds, qualifies the lead, puts the job on your calendar and asks for the review afterward. We build it and run it for you.
+                </p>
+                <div className="mt-9 flex flex-wrap gap-3">
+                  <button onClick={() => scrollTo("contact")} className="btn btn-main">Book a free audit</button>
+                  <button onClick={() => scrollTo("calculator")} className="btn btn-ghost">Run your numbers</button>
+                </div>
+                <ul className="facts mt-9">
+                  {["No long-term contract", "Live in 5–7 business days", "Built and managed for you"].map((f) => (
+                    <li key={f}><Check size={16} style={{ color: c.cyan }} />{f}</li>
+                  ))}
+                </ul>
+              </motion.div>
             </div>
-            <PhoneDemo />
+            <motion.div initial={reduce ? false : { opacity: 0, y: 40, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.9, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}>
+              <PhoneDemo />
+            </motion.div>
           </div>
         </section>
 
+        {/* Trades ticker */}
+        <div className="ticker band-alt" aria-label="Trades we work with">
+          <div className="ticker-track">
+            {[0, 1].map((k) => INDUSTRIES.slice(0, 12).map((i) => <span key={k + i.id} aria-hidden={k === 1}>{i.name}</span>))}
+          </div>
+        </div>
+
         {/* Proof */}
-        <section className="band-alt" aria-labelledby="proof-h">
+        <section className="band-alt" aria-labelledby="proof-h" style={{ borderTop: 0 }}>
           <div className="wrap" style={{ paddingTop: 56, paddingBottom: 56 }}>
-            <h2 id="proof-h" className="text-xl font-bold mb-8">Why the first few minutes decide who gets the job</h2>
+            <Reveal><h2 id="proof-h" className="text-xl font-bold mb-8">Why the first few minutes decide who gets the job</h2></Reveal>
             <div className="proof">
-              {PROOF.map((p) => (
-                <div key={p.figure}>
-                  <div className="fig">{p.figure}</div>
+              {PROOF.map((p, i) => (
+                <Reveal key={p.to} delay={i * 0.12}>
+                  <div className="fig"><CountUp to={p.to} suffix={p.suffix} /></div>
                   <p className="mt-3 text-[.95rem] leading-relaxed">{p.text}</p>
                   <p className="mt-2 text-xs" style={{ color: c.muted }}>
                     {p.href ? <a className="underline" href={p.href} target="_blank" rel="noopener noreferrer">{p.source}</a> : p.source}
                   </p>
-                </div>
+                </Reveal>
               ))}
             </div>
           </div>
@@ -497,47 +745,64 @@ export default function RevolutionAILanding() {
         {/* Same call, two outcomes */}
         <section className="band" aria-labelledby="two-h">
           <div className="wrap grid grid-cols-1 lg:grid-cols-[.9fr_1.1fr] gap-10 lg:gap-14 items-stretch">
-            <figure className="shot">
-              <img src="/img/roofer-at-work.jpg" alt="A roofer nailing shingles at sunset while his phone lights up beside him on the roof." width="1200" height="800" loading="lazy" />
-              <figcaption>You can't answer from up here. You shouldn't have to.</figcaption>
-            </figure>
-            <div>
+            <Reveal as="figure" className="shot">
+              <motion.img ref={shotRef} style={{ y: shotY }} src="/img/roofer-at-work.jpg" alt="A roofer nailing shingles at sunset while his phone lights up beside him on the roof." width="1200" height="800" loading="lazy" />
+              <figcaption>
+                <AnimatePresence mode="wait">
+                  <motion.span key={mode} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }} style={{ display: "block" }}>
+                    {mode === "with" ? "The phone lit up. The system answered. He kept working." : "You can't answer from up here. You shouldn't have to."}
+                  </motion.span>
+                </AnimatePresence>
+              </figcaption>
+            </Reveal>
+            <Reveal delay={0.1}>
               <h2 id="two-h" className="h2">Same Saturday call. Two different Mondays.</h2>
-              <div className="grid sm:grid-cols-2 gap-5 mt-9">
-                <div className="lane lane-off">
-                  <h3>Without a system</h3>
-                  <ol>{WITHOUT.map((r) => <li key={r.time}><r.icon size={17} /><div><time>{r.time}</time><p>{r.text}</p></div></li>)}</ol>
-                </div>
-                <div className="lane lane-on">
-                  <h3>With RevolutionAI</h3>
-                  <ol>{WITH.map((r) => <li key={r.time}><r.icon size={17} /><div><time>{r.time}</time><p>{r.text}</p></div></li>)}</ol>
-                </div>
+              <p className="lede mt-4">Flip the switch to see what happens to one missed call.</p>
+              <div className="switch mt-6" role="group" aria-label="Compare outcomes">
+                {[["without", "Without a system", "#FF9A8B"], ["with", "With RevolutionAI", c.cyan]].map(([id, label, color]) => (
+                  <button type="button" key={id} aria-pressed={mode === id} onClick={() => setMode(id)}>
+                    {mode === id && <motion.span layoutId="mode-pill" className="pill" style={{ background: color }} transition={{ type: "spring", stiffness: 380, damping: 30 }} />}
+                    <span className="lbl">{label}</span>
+                  </button>
+                ))}
               </div>
-              <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">
+              <div className={`rail ${mode === "with" ? "on" : ""}`} aria-live="polite">
+                <AnimatePresence mode="wait">
+                  <motion.ol key={mode} initial="hidden" animate="show" exit={{ opacity: 0, transition: { duration: 0.15 } }} variants={{ show: { transition: { staggerChildren: 0.14 } } }}>
+                    {lane.map((r) => (
+                      <motion.li key={r.time} variants={{ hidden: { opacity: 0, x: -16 }, show: { opacity: 1, x: 0 } }}>
+                        <span className="dot"><r.icon size={18} /></span>
+                        <div><time>{r.time}</time><p>{r.text}</p></div>
+                      </motion.li>
+                    ))}
+                  </motion.ol>
+                </AnimatePresence>
+              </div>
+              <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
                 <button onClick={() => scrollTo("contact")} className="btn btn-main">Find my missed jobs</button>
                 <span className="text-sm" style={{ color: c.muted }}>Illustrative example. Your audit uses your real call and lead data.</span>
               </div>
-            </div>
+            </Reveal>
           </div>
         </section>
 
         {/* What we build */}
         <section id="solutions" className="band band-alt">
           <div className="wrap">
-            <div className="grid lg:grid-cols-2 gap-6 lg:gap-10 items-end mb-10">
+            <Reveal className="grid lg:grid-cols-2 gap-6 lg:gap-10 items-end mb-10">
               <h2 className="h2">Everything between "new lead" and "paid job," handled.</h2>
-              <p className="lede">If it's repetitive, easy to forget, or happens while you're on a job, it belongs in the system. We build it, write it, connect it and keep improving it. Your team gets one inbox and one calendar.</p>
-            </div>
+              <p className="lede">If it's repetitive, easy to forget, or happens while you're on a job, it belongs in the system. We build it, write it, connect it and keep improving it. Tap around: a few of these are live.</p>
+            </Reveal>
             <ul className="bento">
-              {BUILDS.map((b) => (
-                <li key={b.id} className={`tile tile-${b.id}`} onMouseMove={spotlight}>
+              {BUILDS.map((b, i) => (
+                <Reveal as="li" key={b.id} delay={(i % 3) * 0.08} className={`tile orbit tile-${b.id}`} onMouseMove={spotlight}>
                   <div className="tile-copy">
                     <span className="ico"><b.icon size={20} /></span>
                     <h3 className="font-bold text-[1.15rem] mt-4">{b.title}</h3>
                     <p className="mt-1.5 text-[.95rem] leading-relaxed" style={{ color: c.muted }}>{b.desc}</p>
                   </div>
                   <Vignette id={b.id} />
-                </li>
+                </Reveal>
               ))}
             </ul>
           </div>
@@ -546,15 +811,20 @@ export default function RevolutionAILanding() {
         {/* How it works */}
         <section id="how" className="band">
           <div className="wrap">
-            <h2 className="h2 max-w-2xl">A clean install in about a week. No chaos.</h2>
-            <ol className="steps mt-14">
-              {STEPS.map((s) => (
-                <li key={s.title}>
+            <Reveal><h2 className="h2 max-w-2xl">A clean install in about a week. No chaos.</h2></Reveal>
+            <div className="flowwrap mt-12" ref={flowRef}>
+              <div className="flow-track hidden min-[900px]:block" aria-hidden="true"><motion.div style={{ scaleX: flowFill }} /></div>
+              <div className="flow-track min-[900px]:hidden" aria-hidden="true"><motion.div style={{ scaleY: flowFill }} /></div>
+            <ol className="flow">
+              {STEPS.map((s, i) => (
+                <li key={s.title} className={i <= step ? "lit" : ""}>
+                  <span className="num">{i + 1}</span>
                   <h3 className="font-bold text-lg">{s.title}</h3>
                   <p className="mt-2 text-[.95rem] leading-relaxed" style={{ color: c.muted }}>{s.desc}</p>
                 </li>
               ))}
             </ol>
+            </div>
             <div className="mt-12 flex flex-wrap items-center gap-x-5 gap-y-3">
               <button onClick={() => scrollTo("contact")} className="btn btn-main">Start with the free audit</button>
               <span className="text-sm" style={{ color: c.muted }}>Step one costs nothing and takes 30 minutes.</span>
@@ -565,19 +835,19 @@ export default function RevolutionAILanding() {
         {/* Calculator */}
         <section id="calculator" className="band band-alt">
           <div className="wrap">
-            <div className="grid lg:grid-cols-2 gap-10 items-end mb-10">
+            <Reveal className="grid lg:grid-cols-2 gap-10 items-end mb-10">
               <h2 className="h2">Run your own numbers.</h2>
-              <p className="lede">Pick your trade, slide in what a normal month looks like, and see what faster follow-up could be worth. No email needed.</p>
-            </div>
-            <div className="mb-8">
+              <p className="lede">Pick your trade, slide in what a normal month looks like, and watch what faster follow-up could be worth. No email needed.</p>
+            </Reveal>
+            <Reveal className="mb-8">
               <div className="chips" role="group" aria-label="Choose your industry">
                 {INDUSTRIES.map((i) => (
-                  <button key={i.id} type="button" className="chip" aria-pressed={industryId === i.id} onClick={() => pickIndustry(i.id)}>{i.name}</button>
+                  <motion.button whileTap={{ scale: 0.94 }} key={i.id} type="button" className="chip" aria-pressed={industryId === i.id} onClick={() => pickIndustry(i.id)}>{i.name}</motion.button>
                 ))}
               </div>
-            </div>
+            </Reveal>
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_.9fr] gap-6">
-              <div className="panel p-6 sm:p-8 min-w-0">
+              <Reveal className="panel p-6 sm:p-8 min-w-0">
                 <div className="grid sm:grid-cols-2 lg:grid-cols-1 gap-x-8 gap-y-7">
                   {SLIDERS.map((s) => (
                     <div key={s.key}>
@@ -586,24 +856,31 @@ export default function RevolutionAILanding() {
                         <output>{s.prefix || ""}{vals[s.key].toLocaleString("en-US")}{s.suffix || ""}</output>
                       </label>
                       <input id={`f-${s.key}`} type="range" min={s.min} max={s.max} step={s.step} value={vals[s.key]}
+                        style={{ "--p": `${((vals[s.key] - s.min) / (s.max - s.min)) * 100}%` }}
                         onChange={(e) => setVals((p) => ({ ...p, [s.key]: Number(e.target.value) }))} />
                     </div>
                   ))}
                 </div>
-              </div>
-              <div className="panel p-6 sm:p-8 min-w-0" aria-live="polite" style={{ borderColor: "rgba(245,166,35,.35)" }}>
-                <p className="text-sm font-medium" style={{ color: c.muted }}>Estimated added revenue per year{industry ? `, ${industry.name.toLowerCase()}` : ""}</p>
-                <p className="display font-extrabold mt-1" style={{ color: c.gold, fontSize: "clamp(1.9rem, 5.4vw, 3.6rem)", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>+{money(roi.annualImpact)}</p>
-                <div className="mt-6">
-                  <div className="result-row"><span style={{ color: c.muted }}>Revenue now, per month</span><span className="font-semibold">{money(roi.currentRevenue)}</span></div>
-                  <div className="result-row"><span style={{ color: c.muted }}>Projected, per month</span><span className="font-semibold" style={{ color: c.cyan }}>{money(roi.projectedRevenue)}</span></div>
-                  <div className="result-row"><span style={{ color: c.muted }}>Leads recovered from missed calls</span><span className="font-semibold">{roi.recoveredLeads} a month</span></div>
-                  <div className="result-row"><span style={{ color: c.muted }}>Follow-up time handed off</span><span className="font-semibold">{roi.hoursSaved} hrs a week</span></div>
-                  <div className="result-row" style={{ borderBottom: 0 }}><span style={{ color: c.muted }}>Faster first reply</span><span className="font-semibold">{roi.fasterReply}%</span></div>
+              </Reveal>
+              <Reveal delay={0.1} className="panel orbit p-6 sm:p-8 min-w-0">
+                <div aria-live="polite">
+                  <p className="text-sm font-medium" style={{ color: c.muted }}>Estimated added revenue per year{industry ? `, ${industry.name.toLowerCase()}` : ""}</p>
+                  <p className="display font-bold mt-1" style={{ color: c.gold, fontSize: "clamp(1.9rem, 5.4vw, 3.6rem)", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>+<Rolling value={roi.annualImpact} format={money} /></p>
+                </div>
+                <div className="cmp" aria-hidden="true">
+                  <div className="cmp-row"><span>Now</span><motion.div className="cmp-bar cmp-now" animate={{ width: `${nowPct}%` }} transition={{ type: "spring", stiffness: 120, damping: 20 }}>{money(roi.currentRevenue)}</motion.div></div>
+                  <div className="cmp-row"><span>With follow-up</span><motion.div className="cmp-bar cmp-new" initial={{ width: "20%" }} whileInView={{ width: "100%" }} viewport={{ once: true }} transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}>{money(roi.projectedRevenue)}</motion.div></div>
+                </div>
+                <div className="mt-4">
+                  <div className="result-row"><span style={{ color: c.muted }}>Revenue now, per month</span><span className="font-semibold"><Rolling value={roi.currentRevenue} format={money} /></span></div>
+                  <div className="result-row"><span style={{ color: c.muted }}>Projected, per month</span><span className="font-semibold" style={{ color: c.cyan }}><Rolling value={roi.projectedRevenue} format={money} /></span></div>
+                  <div className="result-row"><span style={{ color: c.muted }}>Leads recovered from missed calls</span><span className="font-semibold"><Rolling value={roi.recoveredLeads} /> a month</span></div>
+                  <div className="result-row"><span style={{ color: c.muted }}>Follow-up time handed off</span><span className="font-semibold"><Rolling value={roi.hoursSaved} /> hrs a week</span></div>
+                  <div className="result-row" style={{ borderBottom: 0 }}><span style={{ color: c.muted }}>Faster first reply</span><span className="font-semibold"><Rolling value={roi.fasterReply} />%</span></div>
                 </div>
                 <button onClick={() => scrollTo("contact")} className="btn btn-main w-full mt-5">Get a quote for these numbers</button>
                 <p className="mt-4 text-xs leading-relaxed" style={{ color: c.muted }}>An estimate from the figures you entered, not a guarantee. Your audit replaces these assumptions with your real data.</p>
-              </div>
+              </Reveal>
             </div>
           </div>
         </section>
@@ -611,29 +888,31 @@ export default function RevolutionAILanding() {
         {/* FAQ */}
         <section id="faq" className="band">
           <div className="wrap grid grid-cols-1 lg:grid-cols-[.8fr_1.2fr] gap-12">
-            <div>
+            <Reveal>
               <h2 className="h2">Questions owners ask us first.</h2>
               <p className="lede mt-5">Something else on your mind? Ask it on the audit call, or email <a className="underline" style={{ color: c.cyan }} href="mailto:support@revolutionai.pro">support@revolutionai.pro</a>.</p>
-            </div>
-            <div style={{ borderTop: `1px solid ${c.line}` }}>
+            </Reveal>
+            <div>
               {FAQS.map((f, i) => {
                 const open = openFaq === i;
                 return (
-                  <div key={f.q} style={{ borderBottom: `1px solid ${c.line}` }}>
-                    <h3 style={{ fontFamily: "inherit", letterSpacing: 0 }}>
-                      <button onClick={() => setOpenFaq(open ? null : i)} aria-expanded={open} aria-controls={`faq-${i}`} className="w-full py-5 flex items-center justify-between gap-6 text-left text-[1.05rem] font-semibold">
-                        {f.q}
-                        {open ? <Minus size={20} className="shrink-0" style={{ color: c.cyan }} /> : <Plus size={20} className="shrink-0" style={{ color: c.muted }} />}
-                      </button>
-                    </h3>
-                    <AnimatePresence initial={false}>
-                      {open && (
-                        <motion.div id={`faq-${i}`} initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.22 }} className="overflow-hidden">
-                          <p className="pb-6 pr-10 leading-relaxed" style={{ color: c.muted }}>{f.a}</p>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
+                  <Reveal key={f.q} delay={i * 0.05} className={`faq-item ${open ? "open" : ""}`}>
+                    <div style={{ borderBottom: `1px solid ${c.line}` }} className="px-3">
+                      <h3 style={{ fontFamily: "inherit", letterSpacing: 0 }}>
+                        <button onClick={() => setOpenFaq(open ? null : i)} aria-expanded={open} aria-controls={`faq-${i}`} className="w-full py-5 flex items-center justify-between gap-6 text-left text-[1.05rem] font-semibold">
+                          {f.q}
+                          <Plus size={20} className="faq-plus shrink-0" style={{ color: c.muted }} />
+                        </button>
+                      </h3>
+                      <AnimatePresence initial={false}>
+                        {open && (
+                          <motion.div id={`faq-${i}`} initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden">
+                            <p className="pb-6 pr-10 leading-relaxed" style={{ color: c.muted }}>{f.a}</p>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </Reveal>
                 );
               })}
             </div>
@@ -644,23 +923,25 @@ export default function RevolutionAILanding() {
         <section id="contact" className="band band-alt">
           <div className="wrap grid grid-cols-1 lg:grid-cols-[.85fr_1.15fr] gap-12 items-start">
             <div className="lg:sticky lg:top-28">
-              <h2 className="h2">Book your free automation audit.</h2>
-              <p className="lede mt-5">Thirty minutes, your real lead flow, and a straight answer on whether this is worth it for your business.</p>
+              <Reveal>
+                <h2 className="h2">Book your free automation audit.</h2>
+                <p className="lede mt-5">Thirty minutes, your real lead flow, and a straight answer on whether this is worth it for your business.</p>
+              </Reveal>
               <ul className="mt-8 space-y-5">
                 {[
                   ["We map how leads reach you", "Calls, forms, ads, referrals, and what happens next."],
                   ["We show you the gaps", "Where leads wait, get missed or never hear back."],
                   ["You get an ROI projection", "Built on your numbers, yours to keep."],
                   ["No obligation", "If it's not a fit, we'll say so."],
-                ].map(([t, d]) => (
-                  <li key={t} className="flex gap-3.5">
+                ].map(([t, d], i) => (
+                  <Reveal as="li" key={t} delay={0.1 + i * 0.1} className="flex gap-3.5">
                     <Check size={20} className="shrink-0 mt-0.5" style={{ color: c.cyan }} />
                     <div><div className="font-semibold">{t}</div><div className="text-[.95rem]" style={{ color: c.muted }}>{d}</div></div>
-                  </li>
+                  </Reveal>
                 ))}
               </ul>
             </div>
-            <div className="panel p-4 sm:p-7" style={{ boxShadow: "0 30px 100px -50px rgba(77,212,231,.5)" }}>
+            <div className="panel orbit p-4 sm:p-7" style={{ boxShadow: "0 30px 100px -50px rgba(77,212,231,.5)" }}>
               <p className="text-xs mb-4 leading-relaxed" style={{ color: c.muted }}>
                 By submitting, you agree to our{" "}
                 <Link to="/privacy" className="underline" style={{ color: c.cyan }}>Privacy Policy</Link>{" "}and{" "}
@@ -712,7 +993,7 @@ export default function RevolutionAILanding() {
         </div>
         <div className="footer-plate">
           <div className="wrap py-9 flex flex-col items-center text-center">
-            <img src={LOGO_SRC} alt="RevolutionAI. Automate. Optimize. Thrive." width="190" height="190" loading="lazy" style={{ width: 190, height: 190 }} />
+            <motion.img whileHover={{ rotate: -3, scale: 1.04 }} transition={{ type: "spring", stiffness: 260, damping: 14 }} src={LOGO_SRC} alt="RevolutionAI. Automate. Optimize. Thrive." width="190" height="190" loading="lazy" style={{ width: 190, height: 190 }} />
             <p className="mt-5 text-xs" style={{ color: "#3B5166" }}>© {new Date().getFullYear()} RevolutionAI. All rights reserved.</p>
           </div>
         </div>
