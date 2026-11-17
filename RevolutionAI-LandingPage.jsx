@@ -7,7 +7,7 @@ import {
 import {
   PhoneMissed, MessageSquare, PhoneCall, CalendarCheck, Star, Workflow, BarChart3,
   Menu, X, Plus, Check, RotateCcw, Voicemail, PhoneOff, Send, BellRing,
-  ChevronLeft, Signal, Wifi, BatteryFull, Flame, Droplets, CloudRain,
+  ChevronLeft, Signal, Wifi, BatteryFull, Flame, Droplets, CloudRain, Play, Square,
 } from "lucide-react";
 
 const LOGO_SRC = "/RevolutionAi-Logo-3-cropped%20%281%29.png";
@@ -247,6 +247,45 @@ const spotlight = (e) => {
   e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
 };
 
+/* Sample script for the voice agent tile. Shown as captions, no audio. */
+const CALL = [
+  ["Caller", "Hi, my AC quit and it's ninety degrees in here."],
+  ["Agent", "Sorry about that. I can get a tech out today. What's the address?"],
+  ["Caller", "1420 Oak Street."],
+  ["Agent", "Thanks. I have 2 to 4 this afternoon. Want me to book it?"],
+  ["Caller", "Yes, please."],
+  ["Agent", "Done. A confirmation text is on its way to you now."],
+];
+
+function VoiceDemo() {
+  const [i, setI] = useState(-1);
+  const playing = i >= 0;
+  useEffect(() => {
+    if (!playing) return;
+    const t = setTimeout(() => setI((n) => (n + 1 >= CALL.length ? -1 : n + 1)), 2300);
+    return () => clearTimeout(t);
+  }, [i, playing]);
+  return (
+    <div className="vg voice">
+      <div className={`vg-wave ${playing ? "live" : ""}`} aria-hidden="true">{Array.from({ length: 28 }).map((_, k) => <i key={k} style={{ animationDelay: `${(k % 7) * 0.12}s`, height: `${28 + ((k * 37) % 60)}%` }} />)}</div>
+      <div className="voice-row">
+        <button type="button" className="voice-btn" onClick={() => setI(playing ? -1 : 0)}>
+          {playing ? <Square size={13} fill="currentColor" /> : <Play size={14} fill="currentColor" />}{playing ? "Stop" : "Play a sample call"}
+        </button>
+        <p className="voice-cap" aria-live="polite">
+          <AnimatePresence mode="wait">
+            {playing ? (
+              <motion.span key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }}>
+                <b style={{ color: CALL[i][0] === "Agent" ? c.cyan : c.gold }}>{CALL[i][0]}:</b> {CALL[i][1]}
+              </motion.span>
+            ) : <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>Sample script, shown as captions.</motion.span>}
+          </AnimatePresence>
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function Vignette({ id }) {
   const [slot, setSlot] = useState(null);
   const [stars, setStars] = useState(5);
@@ -260,9 +299,7 @@ function Vignette({ id }) {
       <motion.span variants={pop} className="msg msg-out">Happy to. What's the address?</motion.span>
     </motion.div>
   );
-  if (id === "voice") return (
-    <div className="vg vg-wave" aria-hidden="true">{Array.from({ length: 28 }).map((_, i) => <i key={i} style={{ animationDelay: `${(i % 7) * 0.12}s`, height: `${28 + ((i * 37) % 60)}%` }} />)}</div>
-  );
+  if (id === "voice") return <VoiceDemo />;
   if (id === "booking") return (
     <div className="vg">
       <div className="vg-slots" role="group" aria-label="Try picking a time">
@@ -394,6 +431,22 @@ export default function RevolutionAILanding() {
   const [stickyCta, setStickyCta] = useState(false);
   const [mode, setMode] = useState("without");
   const [step, setStep] = useState(0);
+  const [spy, setSpy] = useState("");
+
+  useEffect(() => {
+    const els = NAV.map(([, id]) => document.getElementById(id)).filter(Boolean);
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) setSpy(e.target.id); });
+    }, { rootMargin: "-45% 0px -50% 0px" });
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+
+  const heroGlow = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    e.currentTarget.style.setProperty("--hx", `${e.clientX - r.left}px`);
+    e.currentTarget.style.setProperty("--hy", `${e.clientY - r.top}px`);
+  };
 
   const { scrollY, scrollYProgress } = useScroll();
   const progress = useSpring(scrollYProgress, { stiffness: 140, damping: 28, mass: 0.3 });
@@ -567,6 +620,43 @@ export default function RevolutionAILanding() {
         .footer-plate { background: linear-gradient(180deg, #E9F0F5 0%, #CBD8E2 55%, #AEBFCD 100%); border-top: 1px solid #7F96AA; box-shadow: inset 0 1px 0 #fff, inset 0 -18px 30px -18px rgba(40,70,100,.35); }
         .footer-plate img { border-radius: 26px; box-shadow: 0 0 0 1px #8FA6B8, 0 0 0 6px #EEF3F7, 0 0 0 7px #9DB1C2, 0 18px 40px -18px rgba(20,45,70,.7); }
         @media (prefers-reduced-motion: reduce) { .site * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+        .site { background-image: radial-gradient(rgba(255,255,255,.055) 1px, transparent 1px); background-size: 30px 30px; }
+        .navlink { color: ${c.muted}; position: relative; transition: color .2s; }
+        .navlink[aria-current="true"] { color: ${c.text}; }
+        .navlink[aria-current="true"]::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: 2px; height: 2px; border-radius: 2px; background: ${c.cyan}; }
+        .hero-cursor { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(420px circle at var(--hx, 70%) var(--hy, 40%), rgba(77,212,231,.13), transparent 65%); }
+        @media (hover: none) { .hero-cursor { display: none; } }
+        .tile .art { width: 68px; height: 68px; object-fit: contain; margin: -6px 0 0 -6px; filter: drop-shadow(0 10px 18px rgba(0,0,0,.55)); transition: transform .45s cubic-bezier(.22,1,.36,1); }
+        .tile:hover .art { transform: translateY(-4px) rotate(-6deg) scale(1.08); }
+        .tile .tile-copy h3 { margin-top: 10px; }
+        .step-art { position: absolute; right: 16px; top: 16px; width: 60px; height: 60px; object-fit: contain; opacity: .28; filter: grayscale(.6); transition: opacity .4s, filter .4s, transform .5s cubic-bezier(.22,1,.36,1); }
+        .flow li.lit .step-art { opacity: 1; filter: drop-shadow(0 8px 16px rgba(0,0,0,.5)); transform: rotate(-5deg) scale(1.06); }
+        .voice { display: grid; gap: 12px; }
+        .vg-wave i { animation-play-state: paused; opacity: .45; } .vg-wave.live i { animation-play-state: running; opacity: 1; }
+        .voice-row { display: grid; gap: 8px; }
+        .voice-btn { display: inline-flex; align-items: center; gap: 8px; width: fit-content; padding: 9px 15px; border-radius: 999px; font-size: .86rem; font-weight: 700; background: ${c.cyan}; color: #04121A; }
+        .voice-cap { min-height: 2.9em; font-size: .86rem; line-height: 1.4; color: ${c.muted}; }
+        .voice-cap span { display: block; }
+        .percall { margin-top: 16px; padding: 12px 14px; border-radius: 12px; font-size: .92rem; line-height: 1.45; background: rgba(245,166,35,.09); border: 1px solid rgba(245,166,35,.25); }
+        .percall b { color: ${c.gold}; font-variant-numeric: tabular-nums; }
+        .contact { position: relative; overflow: hidden; }
+        .contact-bg { position: absolute; inset: 0; background: url(/img/cta-backdrop.jpg) center / cover no-repeat; opacity: .5; -webkit-mask-image: linear-gradient(180deg, transparent, #000 22%, #000 70%, transparent); mask-image: linear-gradient(180deg, transparent, #000 22%, #000 70%, transparent); }
+        .trust { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; font-size: .9rem; line-height: 1.4; color: ${c.muted}; }
+        .trust b { color: ${c.text}; }
+        .trust img { width: 44px; height: 44px; object-fit: contain; }
+        .foot { position: relative; overflow: hidden; border-top: 1px solid ${c.line}; background: radial-gradient(900px 420px at 50% 0%, rgba(77,212,231,.12), transparent 70%), ${c.bg}; }
+        .foot-in { position: relative; padding-top: 64px; padding-bottom: 28px; display: grid; gap: 40px; }
+        .foot-brand { display: flex; align-items: center; gap: 22px; }
+        .foot-brand img { width: 108px; height: 108px; flex: none; filter: drop-shadow(0 0 34px rgba(77,212,231,.45)) drop-shadow(0 14px 26px rgba(0,0,0,.6)); }
+        .foot-word { font-size: clamp(1.9rem, 5vw, 2.8rem); font-weight: 700; line-height: 1; }
+        .foot-tag { margin-top: 8px; font-weight: 700; font-size: clamp(.95rem, 2.4vw, 1.15rem); }
+        .foot-cols { display: grid; gap: 26px; padding-top: 28px; border-top: 1px solid ${c.line}; font-size: .92rem; color: ${c.muted}; }
+        @media (min-width: 860px) { .foot-cols { grid-template-columns: 1fr auto; align-items: start; } .foot-base { text-align: right; } }
+        .foot-links { display: flex; flex-wrap: wrap; gap: 12px 28px; }
+        .foot-links > *, .foot-base a { transition: color .2s; } .foot-links > *:hover, .foot-base a:hover { color: ${c.text}; }
+        .foot-base { display: grid; gap: 8px; }
+        @media (max-width: 859px) { .foot-base { padding-right: 84px; } }
+        .foot-mega { font-weight: 800; font-size: 9.4vw; line-height: .8; white-space: nowrap; text-align: center; margin: 6px 0 -0.12em; color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,.16); background: linear-gradient(180deg, rgba(77,212,231,.22), transparent 85%); -webkit-background-clip: text; background-clip: text; -webkit-mask-image: linear-gradient(180deg, #000 20%, transparent 95%); mask-image: linear-gradient(180deg, #000 20%, transparent 95%); user-select: none; }
         @property --ang { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
         @keyframes spin-ang { to { --ang: 360deg; } }
         .orbit { position: relative; }
@@ -661,7 +751,7 @@ export default function RevolutionAILanding() {
           </a>
           <nav className="hidden md:flex items-center gap-1" aria-label="Main">
             {NAV.map(([label, id]) => (
-              <button key={id} onClick={() => scrollTo(id)} className="px-3.5 py-2 text-sm font-medium rounded-lg hover:bg-white/5" style={{ color: c.muted }}>{label}</button>
+              <button key={id} onClick={() => scrollTo(id)} aria-current={spy === id ? "true" : undefined} className="navlink px-3.5 py-2 text-sm font-medium rounded-lg hover:bg-white/5">{label}</button>
             ))}
           </nav>
           <div className="flex items-center gap-2">
@@ -687,7 +777,8 @@ export default function RevolutionAILanding() {
 
       <main id="top">
         {/* Hero */}
-        <section className="hero">
+        <section className="hero" onPointerMove={heroGlow}>
+          <div className="hero-cursor" aria-hidden="true" />
           <motion.div className="hero-photo" aria-hidden="true" style={{ y: heroY }} />
           <div className="aurora" aria-hidden="true"><i /><i /></div>
           <div className="wrap relative grid grid-cols-1 lg:grid-cols-[1.15fr_.85fr] gap-14 items-center" style={{ paddingTop: 56, paddingBottom: 76 }}>
@@ -797,7 +888,7 @@ export default function RevolutionAILanding() {
               {BUILDS.map((b, i) => (
                 <Reveal as="li" key={b.id} delay={(i % 3) * 0.08} className={`tile orbit tile-${b.id}`} onMouseMove={spotlight}>
                   <div className="tile-copy">
-                    <span className="ico"><b.icon size={20} /></span>
+                    <img className="art" src={`/img/icons/${b.id}.webp`} alt="" width="68" height="68" loading="lazy" />
                     <h3 className="font-bold text-[1.15rem] mt-4">{b.title}</h3>
                     <p className="mt-1.5 text-[.95rem] leading-relaxed" style={{ color: c.muted }}>{b.desc}</p>
                   </div>
@@ -819,6 +910,7 @@ export default function RevolutionAILanding() {
               {STEPS.map((s, i) => (
                 <li key={s.title} className={i <= step ? "lit" : ""}>
                   <span className="num">{i + 1}</span>
+                  <img className="step-art" src={`/img/icons/step-${i + 1}.webp`} alt="" width="60" height="60" loading="lazy" />
                   <h3 className="font-bold text-lg">{s.title}</h3>
                   <p className="mt-2 text-[.95rem] leading-relaxed" style={{ color: c.muted }}>{s.desc}</p>
                 </li>
@@ -871,6 +963,7 @@ export default function RevolutionAILanding() {
                   <div className="cmp-row"><span>Now</span><motion.div className="cmp-bar cmp-now" animate={{ width: `${nowPct}%` }} transition={{ type: "spring", stiffness: 120, damping: 20 }}>{money(roi.currentRevenue)}</motion.div></div>
                   <div className="cmp-row"><span>With follow-up</span><motion.div className="cmp-bar cmp-new" initial={{ width: "20%" }} whileInView={{ width: "100%" }} viewport={{ once: true }} transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}>{money(roi.projectedRevenue)}</motion.div></div>
                 </div>
+                <p className="percall">By this estimate, each missed call is worth about <b><Rolling value={(vals.closeRate / 100) * 0.6 * vals.avgTicket} format={money} /></b> to you.</p>
                 <div className="mt-4">
                   <div className="result-row"><span style={{ color: c.muted }}>Revenue now, per month</span><span className="font-semibold"><Rolling value={roi.currentRevenue} format={money} /></span></div>
                   <div className="result-row"><span style={{ color: c.muted }}>Projected, per month</span><span className="font-semibold" style={{ color: c.cyan }}><Rolling value={roi.projectedRevenue} format={money} /></span></div>
@@ -920,8 +1013,9 @@ export default function RevolutionAILanding() {
         </section>
 
         {/* Contact */}
-        <section id="contact" className="band band-alt">
-          <div className="wrap grid grid-cols-1 lg:grid-cols-[.85fr_1.15fr] gap-12 items-start">
+        <section id="contact" className="band band-alt contact">
+          <div className="contact-bg" aria-hidden="true" />
+          <div className="wrap relative grid grid-cols-1 lg:grid-cols-[.85fr_1.15fr] gap-12 items-start">
             <div className="lg:sticky lg:top-28">
               <Reveal>
                 <h2 className="h2">Book your free automation audit.</h2>
@@ -942,6 +1036,7 @@ export default function RevolutionAILanding() {
               </ul>
             </div>
             <div className="panel orbit p-4 sm:p-7" style={{ boxShadow: "0 30px 100px -50px rgba(77,212,231,.5)" }}>
+              <div className="trust"><img src="/img/icons/shield.webp" alt="" width="44" height="44" loading="lazy" /><span><b>Free, 30 minutes, no obligation.</b><br />No long-term contract if you go ahead.</span></div>
               <p className="text-xs mb-4 leading-relaxed" style={{ color: c.muted }}>
                 By submitting, you agree to our{" "}
                 <Link to="/privacy" className="underline" style={{ color: c.cyan }}>Privacy Policy</Link>{" "}and{" "}
@@ -982,21 +1077,28 @@ export default function RevolutionAILanding() {
       </AnimatePresence>
 
       {/* Footer */}
-      <footer>
-        <div className="wrap py-10 flex flex-col md:flex-row md:items-center justify-between gap-6 text-sm" style={{ color: c.muted, borderTop: `1px solid ${c.line}` }}>
-          <nav className="flex flex-wrap gap-x-7 gap-y-3" aria-label="Footer">
-            {NAV.map(([label, id]) => <button key={id} onClick={() => scrollTo(id)} className="hover:text-white">{label}</button>)}
-            <Link to="/privacy" className="hover:text-white">Privacy Policy</Link>
-            <Link to="/terms" className="hover:text-white">Terms of Service</Link>
-          </nav>
-          <a href="mailto:support@revolutionai.pro" className="hover:text-white">support@revolutionai.pro</a>
-        </div>
-        <div className="footer-plate">
-          <div className="wrap py-9 flex flex-col items-center text-center">
-            <motion.img whileHover={{ rotate: -3, scale: 1.04 }} transition={{ type: "spring", stiffness: 260, damping: 14 }} src={LOGO_SRC} alt="RevolutionAI. Automate. Optimize. Thrive." width="190" height="190" loading="lazy" style={{ width: 190, height: 190 }} />
-            <p className="mt-5 text-xs" style={{ color: "#3B5166" }}>© {new Date().getFullYear()} RevolutionAI. All rights reserved.</p>
+      <footer className="foot">
+        <div className="wrap foot-in">
+          <Reveal className="foot-brand">
+            <motion.img whileHover={{ rotate: 14, scale: 1.05 }} transition={{ type: "spring", stiffness: 200, damping: 12 }} src="/img/emblem.webp" alt="" width="132" height="132" loading="lazy" />
+            <div>
+              <div className="display foot-word">Revolution<span style={{ color: c.cyan }}>AI</span></div>
+              <p className="foot-tag"><span style={{ color: "#5CC96B" }}>Automate.</span> <span style={{ color: c.cyan }}>Optimize.</span> <span style={{ color: c.gold }}>Thrive.</span></p>
+            </div>
+          </Reveal>
+          <div className="foot-cols">
+            <nav className="foot-links" aria-label="Footer">
+              {NAV.map(([label, id]) => <button key={id} onClick={() => scrollTo(id)}>{label}</button>)}
+              <Link to="/privacy">Privacy Policy</Link>
+              <Link to="/terms">Terms of Service</Link>
+            </nav>
+            <div className="foot-base">
+              <a href="mailto:support@revolutionai.pro">support@revolutionai.pro</a>
+              <span>© {new Date().getFullYear()} RevolutionAI. All rights reserved.</span>
+            </div>
           </div>
         </div>
+        <div className="foot-mega display" aria-hidden="true">RevolutionAI</div>
       </footer>
     </div>
   );
