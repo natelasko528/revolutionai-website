@@ -104,9 +104,9 @@ const TRADES = [
 ];
 
 const pains = (t) => [
-  { pain: `${t.scene}.`, fix: "The caller gets a text from your number in seconds, so they can book with you before they try the next company.", tool: "Missed-call text-back and AI voice agent" },
-  { pain: `${t.quote} sit unanswered until you're back at a desk.`, fix: "Form, ad and directory leads get a reply right away, then steady follow-up instead of silence.", tool: "Instant lead response" },
-  { pain: `${t.after}.`, fix: t.afterFix, tool: t.afterTool || "Reviews and repeat work" },
+  { pain: `${t.scene}.`, fix: "The caller gets a text from your number in seconds, so they can book with you before they try the next company.", tool: "Missed-call text-back and AI voice agent", toolId: "textback" },
+  { pain: `${t.quote} sit unanswered until you're back at a desk.`, fix: "Form, ad and directory leads get a reply right away, then steady follow-up instead of silence.", tool: "Instant lead response", toolId: "lead" },
+  { pain: `${t.after}.`, fix: t.afterFix, tool: t.afterTool || "Reviews and repeat work", toolId: t.afterTool ? "pipeline" : "reviews" },
 ];
 
 /* General comparison of typical options, not a claim about any specific vendor. */
@@ -314,9 +314,11 @@ function Vignette({ id }) {
   if (id === "textback") return (
     <motion.div className="vg vg-thread" initial="hidden" whileInView="show" viewport={{ once: true, margin: "0px 0px -15% 0px" }} transition={{ staggerChildren: 0.45 }} aria-hidden="true">
       <motion.span variants={pop} className="msg msg-event"><PhoneMissed size={12} />Missed call</motion.span>
-      <motion.span variants={pop} className="msg msg-out">Sorry we missed you. How can we help?</motion.span>
+      <motion.span variants={pop} className="msg msg-out">Sorry we missed you, we're on a job. How can we help?</motion.span>
       <motion.span variants={pop} className="msg msg-in">Need a quote on a new water heater</motion.span>
       <motion.span variants={pop} className="msg msg-out">Happy to. What's the address?</motion.span>
+      <motion.span variants={pop} className="msg msg-in">88 Pine Ave</motion.span>
+      <motion.span variants={pop} className="msg msg-booked"><CalendarCheck size={12} />Estimate booked for Thursday, 9–11 AM</motion.span>
     </motion.div>
   );
   if (id === "voice") return <VoiceDemo />;
@@ -581,6 +583,22 @@ export default function RevolutionAILanding() {
     if (ind) setVals((p) => ({ ...p, avgTicket: ind.avgTicket, monthlyLeads: ind.calls }));
   };
 
+  const bentoRef = useRef(null);
+  const [slide, setSlide] = useState(0);
+  const onBento = (e) => {
+    const el = e.currentTarget;
+    const first = el.firstElementChild;
+    if (!first) return;
+    const step = first.getBoundingClientRect().width + 12;
+    setSlide(Math.max(0, Math.min(BUILDS.length - 1, Math.round(el.scrollLeft / step))));
+  };
+  const showTile = (id) => {
+    const el = document.getElementById(`tile-${id}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center", inline: "center" });
+    el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
+  };
+
   const pickTrade = (t) => {
     setTradeId(t.id);
     if (t.scn) setSid(t.scn);
@@ -812,7 +830,7 @@ export default function RevolutionAILanding() {
         .proof .fig small { font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 600; color: ${c.muted}; letter-spacing: 0; }
         .site input[type="range"] { height: 34px; }
         .tile-textback .vg-thread { flex: 1 1 auto; justify-content: center; }
-        @media (max-width: 699px) { .tile-lead .vg, .tile-pipeline .vg, .tile-report .vg { display: none; } .tile { gap: 14px; padding: 22px; } }
+        @media (max-width: 699px) { .tile { gap: 14px; padding: 22px; } }
         .vs-more { margin-top: 14px; min-height: 44px; padding: 0 4px; font-weight: 600; font-size: .92rem; color: ${c.cyan}; text-decoration: underline; text-underline-offset: 3px; }
         @media (max-width: 767px) { .vs:not(.all) .vs-row [data-col]:not(.us) { display: none; } .vs:not(.all) .vs-row .us { margin-top: 0; } .vs:not(.all) .vs-row .us::before { display: none; } .vs-row { padding: 14px 16px 12px; } }
         .sticky-cta { left: 0; right: 0; bottom: 0; padding: 10px 76px calc(10px + env(safe-area-inset-bottom)) 12px; background: rgba(7,12,24,.9); backdrop-filter: blur(12px); border-top: 1px solid ${c.line}; filter: none; }
@@ -832,6 +850,24 @@ export default function RevolutionAILanding() {
         .skip:focus { top: 12px; }
         @media (max-width: 480px) { .band .btn-main, .band .btn-ghost { width: 100%; } }
         @media (min-width: 1024px) { #calculator .panel { align-self: start; } }
+        .field-label > span { flex: 1 1 auto; min-width: 0; } .field-label output { white-space: nowrap; margin-left: 14px; }
+        .toollink { display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; min-height: 32px; font-size: .8rem; font-weight: 700; color: ${c.gold}; text-align: left; }
+        .toollink:hover { text-decoration: underline; text-underline-offset: 3px; }
+        .tile { scroll-margin-top: 120px; }
+        .tile.flash { animation: flash 1.6s ease-out 1; }
+        @keyframes flash { 0%, 30% { box-shadow: 0 0 0 2px ${c.cyan}, 0 0 40px -6px rgba(77,212,231,.6); } 100% { box-shadow: 0 0 0 0 transparent; } }
+        .swipe-hint, .dots { display: none; }
+        @media (max-width: 699px) {
+          .bento { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -20px; padding: 4px 20px 6px; scroll-padding: 0 20px; scrollbar-width: none; align-items: flex-start; }
+          .bento::-webkit-scrollbar { display: none; }
+          .bento > li { flex: 0 0 86%; scroll-snap-align: center; }
+          .tile-lead .vg, .tile-pipeline .vg, .tile-report .vg { display: block; }
+          .swipe-hint { display: flex; align-items: center; gap: 6px; margin: -18px 0 12px; font-size: .85rem; font-weight: 600; color: ${c.cyan}; }
+          .dots { display: flex; justify-content: center; gap: 8px; margin-top: 16px; }
+          .dots i { width: 7px; height: 7px; border-radius: 99px; background: rgba(255,255,255,.2); transition: width .25s, background .25s; }
+          .dots i.on { width: 22px; background: ${c.cyan}; }
+          .proof > div { padding: 22px 0; } .proof .fig { font-size: 2.5rem; }
+        }
         @property --ang { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
         @keyframes spin-ang { to { --ang: 360deg; } }
         .orbit { position: relative; }
@@ -1014,7 +1050,7 @@ export default function RevolutionAILanding() {
                     <div className="plug">
                       <span className="tag">The fix</span>
                       <p>{r.fix}</p>
-                      <small>{r.tool}</small>
+                      <button type="button" className="toollink" onClick={() => showTile(r.toolId)}>{r.tool} <ArrowRight size={13} /></button>
                     </div>
                   </motion.li>
                 ))}
@@ -1064,10 +1100,10 @@ export default function RevolutionAILanding() {
               <h2 id="two-h" className="h2">Same Saturday call. Two different Mondays.</h2>
               <p className="lede mt-4">Flip the switch to see what happens to one missed call.</p>
               <div className="switch mt-6" role="group" aria-label="Compare outcomes">
-                {[["without", "Without a system", "#FF9A8B"], ["with", "With RevolutionAI", c.cyan]].map(([id, label, color]) => (
+                {[["without", "Without a system", "#FF9A8B", "No system"], ["with", "With RevolutionAI", c.cyan, "RevolutionAI"]].map(([id, label, color, short]) => (
                   <button type="button" key={id} aria-pressed={mode === id} onClick={() => setMode(id)}>
                     {mode === id && <motion.span layoutId="mode-pill" className="pill" style={{ background: color }} transition={{ type: "spring", stiffness: 380, damping: 30 }} />}
-                    <span className="lbl">{label}</span>
+                    <span className="lbl"><span className="hidden sm:inline">{label}</span><span className="sm:hidden">{short}</span></span>
                   </button>
                 ))}
               </div>
@@ -1098,9 +1134,10 @@ export default function RevolutionAILanding() {
               <h2 className="h2">Seven pieces. Each one closes a specific leak.</h2>
               <p className="lede">If it's repetitive, easy to forget, or happens while you're on a job, it belongs in the system. We build it, write it, connect it and keep improving it. Tap around: a few of these are interactive demos.</p>
             </Reveal>
-            <ul className="bento">
+            <p className="swipe-hint" aria-hidden="true">Swipe to see all seven <ArrowRight size={14} /></p>
+            <ul className="bento" ref={bentoRef} onScroll={onBento}>
               {BUILDS.map((b, i) => (
-                <Reveal as="li" key={b.id} delay={(i % 3) * 0.08} className={`tile orbit tile-${b.id}`} onMouseMove={spotlight}>
+                <Reveal as="li" key={b.id} id={`tile-${b.id}`} delay={(i % 3) * 0.08} className={`tile orbit tile-${b.id}`} onMouseMove={spotlight}>
                   <div className="tile-copy">
                     <img className="art" src={`/img/icons/${b.id}.webp`} alt="" width="68" height="68" loading="lazy" />
                     <p className="solves">{b.solves}</p>
@@ -1111,6 +1148,7 @@ export default function RevolutionAILanding() {
                 </Reveal>
               ))}
             </ul>
+            <div className="dots" aria-hidden="true">{BUILDS.map((b, i) => <i key={b.id} className={i === slide ? "on" : ""} />)}</div>
             <div className="mt-9 flex flex-wrap items-center gap-x-5 gap-y-3">
               <button onClick={() => scrollTo("contact")} className="btn btn-main">Get it built for me</button>
               <span className="text-sm" style={{ color: c.muted }}>You don't pick and assemble. We set up what your business needs.</span>
@@ -1215,7 +1253,7 @@ export default function RevolutionAILanding() {
                 {roi.annual > 1000000 && <p className="math" role="note">That is a very large number. Check that the inputs describe one normal month.</p>}
                 <div className="mt-4">
                   <div className="result-row"><span style={{ color: c.muted }}>Calls you miss a month</span><span className="font-semibold">{one(roi.missed)}</span></div>
-                  <div className="result-row"><span style={{ color: c.muted }}>Jobs won back a month, on average</span><span className="font-semibold" style={{ color: c.cyan }}>about {one(roi.jobsBack)}</span></div>
+                  <div className="result-row"><span style={{ color: c.muted }}>Jobs won back over a year</span><span className="font-semibold" style={{ color: c.cyan }}>about {one(roi.jobsBack * 12)}</span></div>
                   <div className="result-row" style={{ borderBottom: 0 }}><span style={{ color: c.muted }}>What an answered call is worth to you</span><span className="font-semibold"><Rolling value={roi.perCall} format={money} /></span></div>
                 </div>
                 <button onClick={() => scrollTo("contact")} className="btn btn-main w-full mt-5">Check these numbers on a free audit</button>
