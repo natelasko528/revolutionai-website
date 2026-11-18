@@ -826,6 +826,12 @@ export default function RevolutionAILanding() {
         .voice-btn { min-height: 44px; }
         .proof a, .foot-base a { display: inline-block; padding: 6px 0; }
         @media (min-width: 700px) and (max-width: 1039px) { .tile-pipeline { grid-column: span 2; flex-direction: row; align-items: center; } .tile-pipeline .tile-copy { flex: 1 1 52%; } .tile-pipeline .vg { flex: 1 1 48%; } }
+        .who { display: flex; align-items: center; gap: 14px; margin-top: 26px; padding: 16px 18px; border-radius: 16px; border: 1px solid ${c.line}; background: rgba(14,23,43,.8); font-size: .95rem; line-height: 1.45; color: ${c.muted}; }
+        .who img { width: 52px; height: 52px; flex: none; } .who b { color: ${c.text}; }
+        .skip { position: fixed; left: 12px; top: -80px; z-index: 100; padding: 12px 16px; border-radius: 10px; background: ${c.cyan}; color: #04121A; font-weight: 700; }
+        .skip:focus { top: 12px; }
+        @media (max-width: 480px) { .band .btn-main, .band .btn-ghost { width: 100%; } }
+        @media (min-width: 1024px) { #calculator .panel { align-self: start; } }
         @property --ang { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
         @keyframes spin-ang { to { --ang: 360deg; } }
         .orbit { position: relative; }
@@ -911,6 +917,7 @@ export default function RevolutionAILanding() {
         .faq-item.open .faq-plus { transform: rotate(135deg); color: ${c.cyan}; }
       `}</style>
 
+      <a href="#audit-form" className="skip" onClick={(e) => { e.preventDefault(); scrollTo("contact"); }}>Skip to the audit form</a>
       {/* Header */}
       <header className="sticky top-0 z-50 backdrop-blur-xl" style={{ background: "rgba(7,12,24,.86)", borderBottom: `1px solid ${c.line}` }}>
         <div className="wrap flex items-center justify-between h-16">
@@ -1261,6 +1268,10 @@ export default function RevolutionAILanding() {
                 <h2 className="h2">Request your free automation audit.</h2>
                 <p className="lede mt-5">Thirty minutes, your real lead flow, and a straight answer on whether this is worth it for your business.</p>
               </Reveal>
+              <div className="who">
+                <img src="/img/emblem.webp" alt="" width="52" height="52" loading="lazy" />
+                <p><b>Founder-led, based in Milwaukee, Wisconsin.</b> You deal directly with the person who builds your system, not a sales team.</p>
+              </div>
               <ul className="mt-8 space-y-5">
                 {[
                   ["We map how leads reach you", "Calls, forms, ads, referrals, and what happens next."],
