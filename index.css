@@ -4,7 +4,6 @@
 
 /* Iframe form embed styling */
 iframe[id^="inline-"] {
-  width: 100% !important;
   min-height: 850px;
   border: none;
   display: block;

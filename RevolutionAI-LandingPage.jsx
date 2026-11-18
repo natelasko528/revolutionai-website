@@ -67,33 +67,35 @@ const SCENARIOS = [
   },
 ];
 
+/* Two different studies are reported in the same 2011 HBR article; they are labeled separately here. */
 const PROOF = [
   {
-    to: 7, suffix: "×",
-    text: "Companies that reached a new web lead within an hour were nearly seven times as likely to qualify it as those that waited one more hour.",
-    source: "Harvard Business Review, 2011",
+    to: 7, prefix: "~", suffix: "×",
+    text: "Firms that tried to contact a new web lead within an hour were nearly seven times as likely to qualify it as firms that waited even an hour longer.",
+    source: "Harvard Business Review, 2011 (study of 1.25 million leads)",
     href: "https://hbr.org/2011/03/the-short-life-of-online-sales-leads",
   },
   {
     to: 23, suffix: "%",
-    text: "of the 2,241 U.S. companies in that same audit never responded to the lead at all.",
-    source: "Harvard Business Review, 2011",
+    text: "of 2,241 U.S. companies sent a test web lead never responded to it at all.",
+    source: "Harvard Business Review, 2011 (separate audit, same article)",
     href: "https://hbr.org/2011/03/the-short-life-of-online-sales-leads",
   },
   {
     to: 78, suffix: "%",
-    text: "of U.S. consumers say they have walked away from a business after a call went unanswered.",
+    text: "of 1,000 U.S. consumers surveyed say they have abandoned a business after an unanswered call.",
     source: "CallRail consumer survey, 2025",
+    href: "https://www.callrail.com/blog/missed-calls-cost-businesses-more-than-ever",
   },
 ];
 
 /* Trade-specific pains. Picking a trade also sets the calculator and, where one exists, the hero call. */
 const TRADES = [
-  { id: "hvac", name: "HVAC", scn: "heat", scene: "No-heat and no-cool calls come in at night and on weekends", quote: "Replacement quotes", after: "Tune-up customers drift off between seasons", afterFix: "Seasonal tune-up reminders and review requests go out on their own." },
-  { id: "plumbing", name: "Plumbing", scn: "drain", scene: "Emergency calls come in while you're under a sink", quote: "Water heater and repipe quotes", after: "One-time customers never hear from you again", afterFix: "Past customers get a check-in and a review request without anyone remembering to send it." },
-  { id: "roofing", name: "Roofing", scn: "roof", scene: "After a storm the phone rings faster than anyone can answer", quote: "Inspection requests and estimates", after: "Finished roofs never turn into reviews or referrals", afterFix: "Every finished job triggers a review request and a referral ask." },
+  { id: "hvac", name: "HVAC", scn: "heat", scene: "No-heat and no-cool calls come in at night and on weekends, when nobody is at the phone", quote: "Replacement quotes", after: "Tune-up customers drift off between seasons", afterFix: "Seasonal tune-up reminders and review requests go out on their own." },
+  { id: "plumbing", name: "Plumbing", scn: "drain", scene: "Emergency calls come in while you're under a sink with wet hands", quote: "Water heater and repipe quotes", after: "One-time customers never hear from you again", afterFix: "Past customers get a check-in and a review request without anyone remembering to send it." },
+  { id: "roofing", name: "Roofing", scn: "roof", scene: "After a storm, the phone rings faster than anyone can answer", quote: "Inspection requests and estimates", after: "Finished roofs never turn into reviews or referrals", afterFix: "Finished jobs trigger a review request, so good work shows up where the next customer is looking." },
   { id: "electrical", name: "Electrical", scene: "Calls come in while you're in a panel or a crawl space", quote: "Panel upgrade and EV charger quotes", after: "Small jobs never become repeat customers", afterFix: "Past customers hear from you when it's time for the next project." },
-  { id: "remodeling", name: "Remodeling", scene: "Big-ticket inquiries land while you're on a job site", quote: "Kitchen and bath estimates", after: "Long sales cycles stall after the first meeting", afterFix: "Follow-up keeps running for weeks, so the estimate stays alive." },
+  { id: "remodeling", name: "Remodeling", scene: "Big-ticket inquiries land while you're on a job site", quote: "Kitchen and bath estimates", after: "Long sales cycles stall after the first meeting", afterFix: "Follow-up keeps running for weeks, so the estimate stays alive.", afterTool: "Pipeline and follow-up" },
   { id: "landscaping", name: "Landscaping", scene: "Spring calls stack up faster than you can return them", quote: "Design and install quotes", after: "Seasonal customers forget to rebook", afterFix: "Renewal reminders go out before each season starts." },
   { id: "cleaning", name: "Cleaning", scene: "New inquiries arrive while every crew is in a home", quote: "Quote requests", after: "First-time customers don't become recurring ones", afterFix: "A rebooking offer and a review request follow every first clean." },
   { id: "pest", name: "Pest control", scene: "Urgent calls come in after hours", quote: "Inspection requests", after: "Service plans lapse without a reminder", afterFix: "Renewal reminders and review requests run automatically." },
@@ -101,20 +103,20 @@ const TRADES = [
 ];
 
 const pains = (t) => [
-  { pain: `${t.scene}, and nobody can pick up.`, fix: "The caller gets a text from your number in seconds and is booked before they try the next company.", tool: "Missed-call text-back and AI voice agent" },
-  { pain: `${t.quote} sit unanswered until you're back at a desk.`, fix: "Every form, ad and directory lead gets a reply right away, then follow-up until they answer.", tool: "Instant lead response" },
-  { pain: `${t.after}.`, fix: t.afterFix, tool: "Reviews and repeat work" },
+  { pain: `${t.scene}.`, fix: "The caller gets a text from your number in seconds, so they can book with you before they try the next company.", tool: "Missed-call text-back and AI voice agent" },
+  { pain: `${t.quote} sit unanswered until you're back at a desk.`, fix: "Form, ad and directory leads get a reply right away, then steady follow-up instead of silence.", tool: "Instant lead response" },
+  { pain: `${t.after}.`, fix: t.afterFix, tool: t.afterTool || "Reviews and repeat work" },
 ];
 
 /* General comparison of typical options, not a claim about any specific vendor. */
 const OPTIONS = ["Do it yourself with software", "Hire front-office help", "RevolutionAI"];
 const COMPARE = [
   ["Who sets it up", "You do", "You train them", "We do, start to finish"],
-  ["Answers nights and weekends", "Only if you build it", "During their shift", "Yes, every call and form"],
+  ["Answers nights and weekends", "Only if you build it", "During their shift", "Yes, calls and forms"],
   ["Follows up until the lead books", "If you write every sequence", "When there's time", "Yes, automatically"],
-  ["Asks every customer for a review", "If you set it up", "When someone remembers", "Yes, after every job"],
+  ["Asks every customer for a review", "If you set it up", "When someone remembers", "Yes, automatically"],
   ["Your time each week", "Hours of upkeep", "Managing a person", "A glance at the app"],
-  ["Commitment", "Software subscription", "Payroll", "No long-term contract"],
+  ["What you pay for", "Software, plus your time", "Wages", "A custom quote, no long-term contract"],
 ];
 
 const BUILDS = [
@@ -144,44 +146,34 @@ const WITH = [
 const STEPS = [
   { title: "Free audit", desc: "A 30-minute call. We map how leads reach you today and where they leak." },
   { title: "We build it", desc: "Your number, your forms, your wording, your calendar, wired into one system." },
-  { title: "Go live", desc: "Most businesses are running in 5–7 business days, with a walkthrough for your team." },
+  { title: "Go live", desc: "Setup typically takes 5–7 business days, and ends with a walkthrough for your team." },
   { title: "We keep tuning", desc: "We watch the numbers and adjust the messages and timing based on what books jobs." },
 ];
 
+/* Starting job values are rough placeholders for the slider, not benchmarks. */
 const INDUSTRIES = [
-  { id: "hvac", name: "HVAC", avgTicket: 3500, multiplier: 1.2 },
-  { id: "plumbing", name: "Plumbing", avgTicket: 2800, multiplier: 1.15 },
-  { id: "electrical", name: "Electrical", avgTicket: 3200, multiplier: 1.18 },
-  { id: "roofing", name: "Roofing", avgTicket: 12000, multiplier: 1.3 },
-  { id: "remodeling", name: "Home remodeling", avgTicket: 25000, multiplier: 1.28 },
-  { id: "landscaping", name: "Landscaping", avgTicket: 4500, multiplier: 1.15 },
-  { id: "painting", name: "Painting", avgTicket: 4000, multiplier: 1.12 },
-  { id: "cleaning", name: "Cleaning", avgTicket: 350, multiplier: 1.3 },
-  { id: "pest", name: "Pest control", avgTicket: 400, multiplier: 1.25 },
-  { id: "auto", name: "Auto services", avgTicket: 1200, multiplier: 1.1 },
-  { id: "realestate", name: "Real estate", avgTicket: 15000, multiplier: 1.25 },
-  { id: "dental", name: "Dental", avgTicket: 2200, multiplier: 1.2 },
-  { id: "medspa", name: "Med spa", avgTicket: 1800, multiplier: 1.35 },
-  { id: "chiropractic", name: "Chiropractic", avgTicket: 1500, multiplier: 1.18 },
-  { id: "legal", name: "Legal", avgTicket: 5000, multiplier: 1.22 },
-  { id: "veterinary", name: "Veterinary", avgTicket: 800, multiplier: 1.18 },
-  { id: "salon", name: "Salon and barber", avgTicket: 150, multiplier: 1.4 },
-  { id: "fitness", name: "Fitness", avgTicket: 200, multiplier: 1.35 },
-  { id: "photography", name: "Photography", avgTicket: 2500, multiplier: 1.2 },
-  { id: "catering", name: "Catering and events", avgTicket: 5000, multiplier: 1.25 },
+  { id: "hvac", name: "HVAC", avgTicket: 3500 },
+  { id: "plumbing", name: "Plumbing", avgTicket: 2800 },
+  { id: "electrical", name: "Electrical", avgTicket: 3200 },
+  { id: "roofing", name: "Roofing", avgTicket: 12000 },
+  { id: "remodeling", name: "Remodeling", avgTicket: 25000 },
+  { id: "landscaping", name: "Landscaping", avgTicket: 4500 },
+  { id: "painting", name: "Painting", avgTicket: 4000 },
+  { id: "cleaning", name: "Cleaning", avgTicket: 350 },
+  { id: "pest", name: "Pest control", avgTicket: 400 },
 ];
 
 const SLIDERS = [
-  { key: "monthlyLeads", label: "Leads per month", min: 10, max: 500, step: 10 },
-  { key: "closeRate", label: "Close rate", min: 5, max: 80, step: 5, suffix: "%" },
-  { key: "avgTicket", label: "Average job value", min: 100, max: 50000, step: 100, prefix: "$" },
-  { key: "missedCallPercent", label: "Calls you miss", min: 5, max: 60, step: 5, suffix: "%" },
-  { key: "hoursOnFollowUp", label: "Hours a week on follow-up", min: 2, max: 40, step: 1, suffix: " hrs" },
-  { key: "responseTime", label: "Typical time to reply", min: 1, max: 48, step: 1, suffix: " hrs" },
+  { key: "monthlyLeads", label: "Calls and leads a month", min: 10, max: 500, step: 10 },
+  { key: "missedCallPercent", label: "Share you miss or can't answer", min: 5, max: 60, step: 5, suffix: "%" },
+  { key: "closeRate", label: "Close rate when you do talk to them", min: 5, max: 80, step: 5, suffix: "%" },
+  { key: "avgTicket", label: "Average job value", min: 100, max: 50000, step: 50, prefix: "$" },
+  { key: "replyRate", label: "Missed callers who answer a text-back (our assumption, change it)", min: 10, max: 60, step: 5, suffix: "%" },
 ];
 
 const FAQS = [
-  { q: "How long does setup take?", a: "Most businesses are fully running within 5–7 business days. We do the heavy lifting. You give us access and answer a few questions about how you work." },
+  { q: "How long does setup take?", a: "Setup typically takes 5–7 business days. We do the heavy lifting. You give us access and answer a few questions about how you work." },
+  { q: "Will it sound like a robot to my customers?", a: "Texts go out from your business number in wording we write with you, so they read like your office. The voice agent is AI and we don't hide that. Play the sample call in the section above and judge it yourself. Urgent jobs are handed to you." },
   { q: "Do I need to be technical?", a: "No. If you can use a smartphone, you can use this. We build everything for you, and the mobile app keeps your leads and conversations in one place." },
   { q: "What if I already have a CRM?", a: "We can connect to most existing tools or help you move your data over. We look at your setup during the free audit and recommend the simplest route." },
   { q: "Is there a contract?", a: "No long-term contracts. We earn your business every month by delivering results, and you can cancel anytime." },
@@ -189,24 +181,13 @@ const FAQS = [
   { q: "What happens on the free audit?", a: "A 30-minute call where we review your current lead flow, point out the gaps, show how the automation would work for your business, and give you a custom ROI projection. No pressure." },
 ];
 
-function estimate(v, multiplier) {
-  const { monthlyLeads, closeRate, avgTicket, hoursOnFollowUp, missedCallPercent, responseTime } = v;
-  const currentDeals = Math.round(monthlyLeads * (closeRate / 100));
-  const currentRevenue = currentDeals * avgTicket;
-  const missedCalls = Math.round(monthlyLeads * (missedCallPercent / 100));
-  const lostFromMissed = Math.round(missedCalls * (closeRate / 100) * 0.6);
-  const improvedRate = Math.min(closeRate * multiplier, 85);
-  const recoveredLeads = Math.round(lostFromMissed * 0.75);
-  const projectedRevenue = (Math.round(monthlyLeads * (improvedRate / 100)) + recoveredLeads) * avgTicket;
-  const hoursSaved = Math.round(hoursOnFollowUp * 0.85);
-  return {
-    hoursSaved,
-    fasterReply: responseTime > 1 ? Math.round(((responseTime - 0.5) / responseTime) * 100) : 50,
-    recoveredLeads,
-    currentRevenue,
-    projectedRevenue,
-    annualImpact: (projectedRevenue - currentRevenue) * 12,
-  };
+/* Counts only missed calls won back by a text-back. Every input, including the reply rate, is shown to the visitor. */
+function estimate(v) {
+  const missed = v.monthlyLeads * (v.missedCallPercent / 100);
+  const jobsBack = missed * (v.replyRate / 100) * (v.closeRate / 100);
+  const added = jobsBack * v.avgTicket;
+  const now = (v.monthlyLeads - missed) * (v.closeRate / 100) * v.avgTicket;
+  return { missed, jobsBack, added, now, annual: added * 12, perCall: (v.closeRate / 100) * v.avgTicket };
 }
 
 const money = (n) => "$" + Math.round(n).toLocaleString("en-US");
@@ -283,32 +264,43 @@ const CUES = [{"who": "Caller", "text": "Hi, my AC quit and it's ninety degrees 
 
 function VoiceDemo() {
   const audio = useRef(null);
-  const [playing, setPlaying] = useState(false);
+  const [status, setStatus] = useState("idle"); // idle | loading | playing | paused | error
   const [t, setT] = useState(0);
   const [dur, setDur] = useState(CUES[CUES.length - 1].end);
-  const cue = CUES.find((q) => t >= q.start - 0.15 && t <= q.end + 0.3);
+  const playing = status === "playing";
+  const cue = (playing || status === "paused") && CUES.find((q) => t >= q.start - 0.15 && t <= q.end + 0.3);
   const toggle = () => {
     const el = audio.current;
-    if (!el) return;
-    if (el.paused) el.play().catch(() => setPlaying(false)); else el.pause();
+    if (!el || status === "loading") return;
+    if (status === "error") { el.load(); }
+    if (el.paused) { setStatus("loading"); el.play().catch(() => setStatus("error")); } else el.pause();
   };
+  const label = status === "loading" ? "Loading…" : playing ? "Pause" : status === "paused" ? "Resume" : status === "error" ? "Try again" : "Hear a sample call";
   return (
     <div className="vg voice">
       <audio ref={audio} src="/audio/sample-call.mp3" preload="none"
-        onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)}
-        onEnded={() => { setPlaying(false); setT(0); }}
+        onPlaying={() => setStatus("playing")} onWaiting={() => setStatus("loading")}
+        onPause={(e) => { if (!e.currentTarget.ended) setStatus((x) => (x === "error" ? x : "paused")); }}
+        onEnded={() => { setStatus("idle"); setT(0); }}
+        onError={() => setStatus("error")}
         onLoadedMetadata={(e) => setDur(e.currentTarget.duration || dur)}
         onTimeUpdate={(e) => setT(e.currentTarget.currentTime)} />
       <div className={`vg-wave ${playing ? "live" : ""}`} aria-hidden="true">{Array.from({ length: 28 }).map((_, k) => <i key={k} style={{ animationDelay: `${(k % 7) * 0.12}s`, height: `${28 + ((k * 37) % 60)}%` }} />)}</div>
       <div className="voice-bar" aria-hidden="true"><i style={{ width: `${Math.min(100, (t / dur) * 100)}%` }} /></div>
       <div className="voice-row">
-        <button type="button" className="voice-btn" onClick={toggle} aria-pressed={playing}>
-          {playing ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}{playing ? "Pause" : t > 0 ? "Resume" : "Hear a sample call"}
+        <button type="button" className="voice-btn" onClick={toggle} aria-busy={status === "loading"}>
+          {playing ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}{label}
         </button>
-        <p className="voice-cap" aria-live="polite">
-          {cue ? <span><b style={{ color: cue.who === "Agent" ? c.cyan : c.gold }}>{cue.who}:</b> {cue.text}</span>
-            : <span>23 seconds, sound on. Sample call with AI-generated voices.</span>}
-        </p>
+        <div className="voice-cap" aria-live="polite">
+          {status === "error" ? (
+            <div>
+              <p>The audio didn't load. Here is the same call as text:</p>
+              <ul className="voice-script">{CUES.map((q) => <li key={q.start}><b style={{ color: q.who === "Agent" ? c.cyan : c.gold }}>{q.who}:</b> {q.text}</li>)}</ul>
+            </div>
+          ) : cue ? <p><b style={{ color: cue.who === "Agent" ? c.cyan : c.gold }}>{cue.who}:</b> {cue.text}</p>
+            : <p>{status === "loading" ? "Fetching the recording…" : "23 seconds. Turn your sound on."}</p>}
+        </div>
+        <p className="voice-note">Sample call. Both voices are AI-generated.</p>
       </div>
     </div>
   );
@@ -346,7 +338,7 @@ function Vignette({ id }) {
   if (id === "reviews") return (
     <div className="vg vg-stars" role="group" aria-label="Try rating">
       {[1, 2, 3, 4, 5].map((n) => (
-        <motion.button type="button" key={n} aria-label={`${n} star${n > 1 ? "s" : ""}`} aria-pressed={stars >= n} onClick={() => setStars(n)} whileHover={{ scale: 1.25, rotate: -8 }} whileTap={{ scale: 0.9 }}>
+        <motion.button type="button" key={n} aria-label={`${n} star${n > 1 ? "s" : ""}`} aria-pressed={stars >= n} onClick={() => setStars(stars === n ? n - 1 : n)} whileHover={{ scale: 1.25, rotate: -8 }} whileTap={{ scale: 0.9 }}>
           <Star size={22} fill={stars >= n ? "currentColor" : "none"} />
         </motion.button>
       ))}
@@ -366,6 +358,39 @@ function Vignette({ id }) {
     </div>
   );
   return null;
+}
+
+/* The chat widget loads only when asked for, so it never covers the page or blocks taps by default. */
+function ChatLauncher() {
+  const [state, setState] = useState("idle"); // idle | loading | ready | error
+  const load = () => {
+    if (state !== "idle") return;
+    setState("loading");
+    const sc = document.createElement("script");
+    sc.src = "https://widgets.leadconnectorhq.com/loader.js";
+    sc.setAttribute("data-resources-url", "https://widgets.leadconnectorhq.com/chat-widget/loader.js");
+    sc.setAttribute("data-widget-id", "6976c17e639c142ec5a07dbc");
+    sc.onerror = () => setState("error");
+    sc.onload = () => {
+      let n = 0;
+      const timer = setInterval(() => {
+        n += 1;
+        const api = window.leadConnector && window.leadConnector.chatWidget;
+        if (document.querySelector("chat-widget")) {
+          try { if (api && api.openWidget) api.openWidget(); } catch (e) { /* widget opens on its own bubble */ }
+          if ((api && api.openWidget) || n > 16) { clearInterval(timer); setState("ready"); }
+        } else if (n > 60) { clearInterval(timer); setState("error"); }
+      }, 250);
+    };
+    document.body.appendChild(sc);
+  };
+  if (state === "ready") return null;
+  if (state === "error") return <a className="chat-fab" href="mailto:support@revolutionai.pro" aria-label="Chat didn't load. Email us instead"><MessageSquare size={22} /></a>;
+  return (
+    <button type="button" className="chat-fab" onClick={load} aria-label="Chat with us" aria-busy={state === "loading"}>
+      {state === "loading" ? <span className="spin" /> : <MessageSquare size={22} />}
+    </button>
+  );
 }
 
 function PhoneDemo({ sid, onPick }) {
@@ -447,7 +472,7 @@ function PhoneDemo({ sid, onPick }) {
       </Tilt>
       <div className="phone-caption">
         <span>Example conversations. Yours use your business name and your wording.</span>
-        <button type="button" onClick={() => setShown(1)} className="replay" disabled={!done && !reduce}><RotateCcw size={13} /> Replay</button>
+        {!reduce && <button type="button" onClick={() => setShown(1)} className="replay" disabled={!done}><RotateCcw size={13} /> Replay</button>}
       </div>
     </div>
   );
@@ -457,8 +482,8 @@ export default function RevolutionAILanding() {
   const reduce = useReducedMotion();
   const [navOpen, setNavOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState(0);
-  const [industryId, setIndustryId] = useState("");
-  const [vals, setVals] = useState({ monthlyLeads: 50, closeRate: 25, avgTicket: 2500, hoursOnFollowUp: 15, missedCallPercent: 30, responseTime: 24 });
+  const [industryId, setIndustryId] = useState("hvac");
+  const [vals, setVals] = useState({ monthlyLeads: 50, missedCallPercent: 30, closeRate: 25, avgTicket: 3500, replyRate: 30 });
   const [iframeHeight, setIframeHeight] = useState(1028);
   const [stickyCta, setStickyCta] = useState(false);
   const [mode, setMode] = useState("without");
@@ -501,6 +526,7 @@ export default function RevolutionAILanding() {
       const contact = document.getElementById("contact");
       const nearForm = contact ? contact.getBoundingClientRect().top < window.innerHeight * 0.9 : false;
       setStickyCta(window.scrollY > 640 && !nearForm);
+      if (window.scrollY < 500) setSpy("");
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -520,9 +546,23 @@ export default function RevolutionAILanding() {
   }, []);
 
   const scrollTo = (id) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    const wasOpen = navOpen;
     setNavOpen(false);
+    const go = () => {
+      const el = document.getElementById(id === "contact" && window.innerWidth < 1024 ? "audit-form" : id);
+      if (!el) return;
+      const top = el.getBoundingClientRect().top + window.scrollY - 80;
+      window.scrollTo({ top, behavior: reduce ? "auto" : "smooth" });
+    };
+    if (wasOpen) setTimeout(go, 80); else go();
   };
+
+  useEffect(() => {
+    if (!navOpen) return;
+    const onKey = (e) => { if (e.key === "Escape") setNavOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [navOpen]);
 
   const pickIndustry = (id) => {
     setIndustryId(id);
@@ -533,12 +573,13 @@ export default function RevolutionAILanding() {
   const pickTrade = (t) => {
     setTradeId(t.id);
     if (t.scn) setSid(t.scn);
-    if (t.id) pickIndustry(t.id);
+    if (t.id) pickIndustry(t.id); else setIndustryId("");
   };
 
   const industry = INDUSTRIES.find((i) => i.id === industryId);
-  const roi = estimate(vals, industry?.multiplier || 1.2);
-  const nowPct = roi.projectedRevenue > 0 ? Math.max(4, (roi.currentRevenue / roi.projectedRevenue) * 100) : 4;
+  const roi = estimate(vals);
+  const nowPct = roi.now + roi.added > 0 ? Math.max(8, (roi.now / (roi.now + roi.added)) * 100) : 8;
+  const one = (x) => (Math.round(x * 10) / 10).toLocaleString("en-US");
   const lane = mode === "with" ? WITH : WITHOUT;
   const words = (text, start) => text.split(" ").map((w, i) => (
     <span className="word" key={w + i}><motion.span initial={reduce ? false : { y: "110%" }} animate={{ y: 0 }} transition={{ duration: 0.7, delay: 0.08 * (start + i), ease: [0.22, 1, 0.36, 1] }}>{w}</motion.span></span>
@@ -670,7 +711,7 @@ export default function RevolutionAILanding() {
         .tile .art { width: 68px; height: 68px; object-fit: contain; margin: -6px 0 0 -6px; filter: drop-shadow(0 10px 18px rgba(0,0,0,.55)); transition: transform .45s cubic-bezier(.22,1,.36,1); }
         .tile:hover .art { transform: translateY(-4px) rotate(-6deg) scale(1.08); }
         .tile .tile-copy h3 { margin-top: 10px; }
-        .step-art { position: absolute; right: 16px; top: 16px; width: 60px; height: 60px; object-fit: contain; opacity: .28; filter: grayscale(.6); transition: opacity .4s, filter .4s, transform .5s cubic-bezier(.22,1,.36,1); }
+        .step-art { float: right; margin: -4px -4px 8px 12px; width: 56px; height: 56px; object-fit: contain; opacity: .28; filter: grayscale(.6); transition: opacity .4s, filter .4s, transform .5s cubic-bezier(.22,1,.36,1); }
         .flow li.lit .step-art { opacity: 1; filter: drop-shadow(0 8px 16px rgba(0,0,0,.5)); transform: rotate(-5deg) scale(1.06); }
         .voice { display: grid; gap: 12px; }
         .vg-wave i { animation-play-state: paused; opacity: .45; } .vg-wave.live i { animation-play-state: running; opacity: 1; }
@@ -733,6 +774,29 @@ export default function RevolutionAILanding() {
           .vs-row .us { display: block; margin-top: 6px; padding: 10px 12px; border-radius: 12px; } .vs-row .us svg { display: none; } .vs-row .us::before { color: ${c.cyan}; opacity: 1; }
         }
         .voice-bar { height: 4px; border-radius: 2px; background: rgba(255,255,255,.12); overflow: hidden; } .voice-bar i { display: block; height: 100%; background: ${c.cyan}; transition: width .25s linear; }
+        .hero .btn { min-height: 52px; } @media (max-width: 480px) { .hero .btn { width: 100%; } }
+        .scn button { min-height: 44px; } .replay { min-height: 44px; padding: 0 6px; margin: -12px -6px; }
+        .chip { min-height: 44px; }
+        .vg-stars button { width: 44px; height: 44px; place-items: center; margin: 0 -8px 0 -3px; }
+        .foot-links > * { padding: 8px 0; }
+        .ai-tag { position: absolute; z-index: 1; top: 12px; right: 12px; padding: 4px 9px; border-radius: 999px; font-size: .7rem; font-weight: 600; color: #DDE5EE; background: rgba(4,8,16,.62); backdrop-filter: blur(6px); }
+        .voice-cap { min-height: 2.9em; } .voice-cap p { margin: 0; }
+        .voice-script { margin-top: 6px; display: grid; gap: 4px; }
+        .voice-note { font-size: .74rem; color: ${c.muted}; opacity: .85; }
+        .math { margin-top: 14px; padding: 12px 14px; border-radius: 12px; font-size: .88rem; line-height: 1.5; color: ${c.muted}; background: rgba(255,255,255,.04); border: 1px solid ${c.line}; font-variant-numeric: tabular-nums; }
+        .math b { color: ${c.gold}; white-space: nowrap; }
+        .cmp-new { width: 100%; }
+        .next { display: grid; gap: 8px; margin: 4px 0 16px; counter-reset: nx; font-size: .9rem; line-height: 1.4; color: ${c.muted}; }
+        .next li { counter-increment: nx; display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; }
+        .next li::before { content: counter(nx); width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: .78rem; font-weight: 700; color: #04121A; background: ${c.cyan}; }
+        .next b { color: ${c.text}; }
+        .formclip { overflow: hidden; border-radius: 14px; }
+        .formclip iframe { display: block; width: calc(100% + 6px) !important; max-width: none; margin: -3px; }
+        .chat-fab { position: fixed; right: 16px; bottom: 16px; z-index: 45; width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; color: ${c.cyan}; background: ${c.surface}; border: 1px solid rgba(77,212,231,.5); box-shadow: 0 14px 34px -12px rgba(0,0,0,.8); transition: transform .15s, background .15s; }
+        .chat-fab:hover { transform: translateY(-2px); background: #14213B; }
+        .spin { width: 20px; height: 20px; border-radius: 50%; border: 2px solid rgba(77,212,231,.3); border-top-color: ${c.cyan}; animation: spin1 .8s linear infinite; }
+        @keyframes spin1 { to { transform: rotate(360deg); } }
+        .sticky-cta { right: 84px; }
         @property --ang { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
         @keyframes spin-ang { to { --ang: 360deg; } }
         .orbit { position: relative; }
@@ -759,9 +823,9 @@ export default function RevolutionAILanding() {
         .scn-label { position: relative; display: inline-flex; align-items: center; gap: 6px; }
         .phone-stage { position: relative; transform-style: preserve-3d; }
         .chip-float { position: absolute; display: none; align-items: center; gap: 6px; padding: 9px 14px; border-radius: 999px; font-size: .8rem; font-weight: 600; white-space: nowrap; background: rgba(14,23,43,.92); border: 1px solid rgba(255,255,255,.16); box-shadow: 0 18px 40px -16px rgba(0,0,0,.9); transform: translateZ(60px); }
-        @media (min-width: 1024px) { .chip-float { display: inline-flex; } }
+        @media (min-width: 1280px) { .chip-float { display: inline-flex; } }
         .chip-a { left: -128px; top: 150px; color: ${c.cyan}; animation: bob 5s ease-in-out infinite; }
-        .chip-b { right: -74px; bottom: 74px; color: ${c.gold}; }
+        .chip-b { left: -150px; bottom: 150px; color: ${c.gold}; }
         @keyframes bob { 0%, 100% { margin-top: 0; } 50% { margin-top: -10px; } }
         .ticker { overflow: hidden; border-bottom: 1px solid ${c.line}; -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
         .ticker-track { display: flex; width: max-content; gap: 44px; padding: 18px 0; animation: slide 46s linear infinite; }
@@ -825,14 +889,14 @@ export default function RevolutionAILanding() {
             <span className="w-11 h-11 shrink-0"><img src="/apple-touch-icon.png" alt="" width="44" height="44" className="w-full h-full object-contain" /></span>
             <span className="display font-bold text-lg">Revolution<span style={{ color: c.cyan }}>AI</span></span>
           </a>
-          <nav className="hidden md:flex items-center gap-1" aria-label="Main">
+          <nav className="hidden lg:flex items-center gap-1" aria-label="Main">
             {NAV.map(([label, id]) => (
               <button key={id} onClick={() => scrollTo(id)} aria-current={spy === id ? "true" : undefined} className="navlink px-3.5 py-2 text-sm font-medium rounded-lg hover:bg-white/5">{label}</button>
             ))}
           </nav>
           <div className="flex items-center gap-2">
-            <span className="hidden sm:block"><button onClick={() => scrollTo("contact")} className="btn btn-main" style={{ padding: "10px 18px", fontSize: ".9rem" }}>Book a free audit</button></span>
-            <button className="md:hidden p-2 rounded-lg hover:bg-white/5" onClick={() => setNavOpen(!navOpen)} aria-expanded={navOpen} aria-label="Menu">
+            <span className="hidden sm:block"><button onClick={() => scrollTo("contact")} className="btn btn-main whitespace-nowrap" style={{ padding: "10px 18px", fontSize: ".9rem" }}>Book a free audit</button></span>
+            <button className="lg:hidden rounded-lg hover:bg-white/5 grid place-items-center" style={{ width: 44, height: 44 }} onClick={() => setNavOpen(!navOpen)} aria-expanded={navOpen} aria-label="Menu">
               {navOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
@@ -840,11 +904,12 @@ export default function RevolutionAILanding() {
         <motion.div aria-hidden="true" style={{ scaleX: progress, transformOrigin: "0 50%", height: 2, background: `linear-gradient(90deg, ${c.cyan}, ${c.gold})`, position: "absolute", left: 0, right: 0, bottom: -1 }} />
         <AnimatePresence>
           {navOpen && (
-            <motion.nav initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} className="md:hidden overflow-hidden" style={{ background: c.bgAlt, borderTop: `1px solid ${c.line}` }} aria-label="Mobile">
+            <motion.nav initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} className="lg:hidden overflow-hidden absolute left-0 right-0 top-full" style={{ background: c.bgAlt, borderTop: `1px solid ${c.line}`, borderBottom: `1px solid ${c.line}` }} aria-label="Mobile">
               <div className="wrap py-3">
-                {[...NAV, ["Book a free audit", "contact"]].map(([label, id]) => (
+                {NAV.map(([label, id]) => (
                   <button key={id} onClick={() => scrollTo(id)} className="block w-full text-left px-2 py-3.5 text-base font-medium" style={{ borderBottom: `1px solid ${c.line}` }}>{label}</button>
                 ))}
+                <button onClick={() => scrollTo("contact")} className="btn btn-main w-full mt-4 mb-2">Book a free audit</button>
               </div>
             </motion.nav>
           )}
@@ -865,14 +930,14 @@ export default function RevolutionAILanding() {
               </h1>
               <motion.div initial={reduce ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.55 }}>
                 <p className="lede mt-7">
-                  You're on a roof, under a sink or in an attic. RevolutionAI answers anyway: it texts back every missed call in seconds, qualifies the lead, puts the job on your calendar and asks for the review afterward. We build it and run it for you.
+                  You're on a roof, under a sink or in an attic. RevolutionAI answers anyway: it texts back missed calls in seconds, asks the right questions, gets the job onto your calendar and asks for the review afterward. We build it and run it for you.
                 </p>
                 <div className="mt-9 flex flex-wrap gap-3">
                   <button onClick={() => scrollTo("contact")} className="btn btn-main">Book a free audit</button>
                   <button onClick={() => scrollTo("calculator")} className="btn btn-ghost">Run your numbers</button>
                 </div>
                 <ul className="facts mt-9">
-                  {["No long-term contract", "Live in 5–7 business days", "Built and managed for you"].map((f) => (
+                  {["No long-term contract", "Typically live in 5–7 business days", "Built and managed for you"].map((f) => (
                     <li key={f}><Check size={16} style={{ color: c.cyan }} />{f}</li>
                   ))}
                 </ul>
@@ -923,12 +988,12 @@ export default function RevolutionAILanding() {
 
         {/* Proof */}
         <section aria-labelledby="proof-h">
-          <div className="wrap" style={{ paddingTop: 56, paddingBottom: 56 }}>
-            <Reveal><h2 id="proof-h" className="text-xl font-bold mb-8">Why the first few minutes decide who gets the job</h2></Reveal>
+          <div className="wrap" style={{ paddingTop: 72, paddingBottom: 72 }}>
+            <Reveal><h2 id="proof-h" className="h2 mb-10" style={{ maxWidth: "18em" }}>Slow replies lose leads. The research is blunt.</h2></Reveal>
             <div className="proof">
               {PROOF.map((p, i) => (
                 <Reveal key={p.to} delay={i * 0.12}>
-                  <div className="fig"><CountUp to={p.to} suffix={p.suffix} /></div>
+                  <div className="fig">{p.prefix || ""}<CountUp to={p.to} suffix={p.suffix} /></div>
                   <p className="mt-3 text-[.95rem] leading-relaxed">{p.text}</p>
                   <p className="mt-2 text-xs" style={{ color: c.muted }}>
                     {p.href ? <a className="underline" href={p.href} target="_blank" rel="noopener noreferrer">{p.source}</a> : p.source}
@@ -943,11 +1008,12 @@ export default function RevolutionAILanding() {
         <section className="band band-alt" aria-labelledby="two-h">
           <div className="wrap grid grid-cols-1 lg:grid-cols-[.9fr_1.1fr] gap-10 lg:gap-14 items-stretch">
             <Reveal as="figure" className="shot">
-              <motion.img ref={shotRef} style={{ y: shotY }} src="/img/roofer-at-work.jpg" alt="A roofer nailing shingles at sunset while his phone lights up beside him on the roof." width="1200" height="800" loading="lazy" />
+              <motion.img ref={shotRef} style={{ y: shotY }} src="/img/roofer-at-work.jpg" alt="AI-generated illustration of a roofer nailing shingles at sunset with his phone beside him on the roof." width="1200" height="800" loading="lazy" />
+              <span className="ai-tag">AI-generated image</span>
               <figcaption>
                 <AnimatePresence mode="wait">
                   <motion.span key={mode} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }} style={{ display: "block" }}>
-                    {mode === "with" ? "The phone lit up. The system answered. He kept working." : "You can't answer from up here. You shouldn't have to."}
+                    {mode === "with" ? "The phone rang. The system answered. He kept working." : "You can't answer from up here. You shouldn't have to."}
                   </motion.span>
                 </AnimatePresence>
               </figcaption>
@@ -1048,8 +1114,8 @@ export default function RevolutionAILanding() {
             <ol className="flow">
               {STEPS.map((s, i) => (
                 <li key={s.title} className={i <= step ? "lit" : ""}>
+                  <img className="step-art" src={`/img/icons/step-${i + 1}.webp`} alt="" width="56" height="56" loading="lazy" />
                   <span className="num">{i + 1}</span>
-                  <img className="step-art" src={`/img/icons/step-${i + 1}.webp`} alt="" width="60" height="60" loading="lazy" />
                   <h3 className="font-bold text-lg">{s.title}</h3>
                   <p className="mt-2 text-[.95rem] leading-relaxed" style={{ color: c.muted }}>{s.desc}</p>
                 </li>
@@ -1067,19 +1133,20 @@ export default function RevolutionAILanding() {
         <section id="calculator" className="band band-alt">
           <div className="wrap">
             <Reveal className="grid lg:grid-cols-2 gap-10 items-end mb-10">
-              <h2 className="h2">What are the leaks costing you?</h2>
-              <p className="lede">Pick your trade, slide in what a normal month looks like, and watch what faster follow-up could be worth. No email needed.</p>
+              <h2 className="h2">What are missed calls costing you?</h2>
+              <p className="lede">Slide in a normal month. This counts one thing only: jobs won back when a missed call gets a text instead of silence. No email needed.</p>
             </Reveal>
             <Reveal className="mb-8">
-              <div className="chips" role="group" aria-label="Choose your industry">
+              <div className="chips" role="group" aria-label="Choose your trade">
                 {INDUSTRIES.map((i) => (
                   <motion.button whileTap={{ scale: 0.94 }} key={i.id} type="button" className="chip" aria-pressed={industryId === i.id} onClick={() => pickIndustry(i.id)}>{i.name}</motion.button>
                 ))}
               </div>
+              <p className="mt-3 text-xs" style={{ color: c.muted }}>Picking a trade only sets a starting job value. Change it to yours.</p>
             </Reveal>
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_.9fr] gap-6">
               <Reveal className="panel p-6 sm:p-8 min-w-0">
-                <div className="grid sm:grid-cols-2 lg:grid-cols-1 gap-x-8 gap-y-7">
+                <div className="grid gap-y-7">
                   {SLIDERS.map((s) => (
                     <div key={s.key}>
                       <label className="field-label" htmlFor={`f-${s.key}`}>
@@ -1095,23 +1162,21 @@ export default function RevolutionAILanding() {
               </Reveal>
               <Reveal delay={0.1} className="panel orbit p-6 sm:p-8 min-w-0">
                 <div aria-live="polite">
-                  <p className="text-sm font-medium" style={{ color: c.muted }}>Estimated added revenue per year{industry ? `, ${industry.name.toLowerCase()}` : ""}</p>
-                  <p className="display font-bold mt-1" style={{ color: c.gold, fontSize: "clamp(1.9rem, 5.4vw, 3.6rem)", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>+<Rolling value={roi.annualImpact} format={money} /></p>
+                  <p className="text-sm font-medium" style={{ color: c.muted }}>Estimated revenue won back per year</p>
+                  <p className="display font-bold mt-1" style={{ color: c.gold, fontSize: "clamp(1.9rem, 5.4vw, 3.6rem)", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>+<Rolling value={roi.annual} format={money} /></p>
                 </div>
+                <p className="math">{one(roi.missed)} missed calls × {vals.replyRate}% who answer the text × {vals.closeRate}% close rate × {money(vals.avgTicket)} = <b>{money(roi.added)} a month</b></p>
                 <div className="cmp" aria-hidden="true">
-                  <div className="cmp-row"><span>Now</span><motion.div className="cmp-bar cmp-now" animate={{ width: `${nowPct}%` }} transition={{ type: "spring", stiffness: 120, damping: 20 }}>{money(roi.currentRevenue)}</motion.div></div>
-                  <div className="cmp-row"><span>With follow-up</span><motion.div className="cmp-bar cmp-new" initial={{ width: "20%" }} whileInView={{ width: "100%" }} viewport={{ once: true }} transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}>{money(roi.projectedRevenue)}</motion.div></div>
+                  <div className="cmp-row"><span>Now</span><motion.div className="cmp-bar cmp-now" animate={{ width: `${nowPct}%` }} transition={{ type: "spring", stiffness: 120, damping: 20 }}>{money(roi.now)}</motion.div></div>
+                  <div className="cmp-row"><span>With text-back</span><div className="cmp-bar cmp-new">{money(roi.now + roi.added)}</div></div>
                 </div>
-                <p className="percall">By this estimate, each missed call is worth about <b><Rolling value={(vals.closeRate / 100) * 0.6 * vals.avgTicket} format={money} /></b> to you.</p>
                 <div className="mt-4">
-                  <div className="result-row"><span style={{ color: c.muted }}>Revenue now, per month</span><span className="font-semibold"><Rolling value={roi.currentRevenue} format={money} /></span></div>
-                  <div className="result-row"><span style={{ color: c.muted }}>Projected, per month</span><span className="font-semibold" style={{ color: c.cyan }}><Rolling value={roi.projectedRevenue} format={money} /></span></div>
-                  <div className="result-row"><span style={{ color: c.muted }}>Leads recovered from missed calls</span><span className="font-semibold"><Rolling value={roi.recoveredLeads} /> a month</span></div>
-                  <div className="result-row"><span style={{ color: c.muted }}>Follow-up time handed off</span><span className="font-semibold"><Rolling value={roi.hoursSaved} /> hrs a week</span></div>
-                  <div className="result-row" style={{ borderBottom: 0 }}><span style={{ color: c.muted }}>Faster first reply</span><span className="font-semibold"><Rolling value={roi.fasterReply} />%</span></div>
+                  <div className="result-row"><span style={{ color: c.muted }}>Calls you miss a month</span><span className="font-semibold">{one(roi.missed)}</span></div>
+                  <div className="result-row"><span style={{ color: c.muted }}>Jobs won back a month</span><span className="font-semibold" style={{ color: c.cyan }}>{one(roi.jobsBack)}</span></div>
+                  <div className="result-row" style={{ borderBottom: 0 }}><span style={{ color: c.muted }}>What an answered call is worth to you</span><span className="font-semibold"><Rolling value={roi.perCall} format={money} /></span></div>
                 </div>
-                <button onClick={() => scrollTo("contact")} className="btn btn-main w-full mt-5">Get a quote for these numbers</button>
-                <p className="mt-4 text-xs leading-relaxed" style={{ color: c.muted }}>An estimate from the figures you entered, not a guarantee. Your audit replaces these assumptions with your real data.</p>
+                <button onClick={() => scrollTo("contact")} className="btn btn-main w-full mt-5">Check these numbers on a free audit</button>
+                <p className="mt-4 text-xs leading-relaxed" style={{ color: c.muted }}>An estimate, not a guarantee. It uses only the numbers shown here and leaves out web leads, reviews and repeat work. The reply rate is our assumption, so set it wherever you think is fair. Your audit replaces it with your real call data.</p>
               </Reveal>
             </div>
           </div>
@@ -1174,17 +1239,22 @@ export default function RevolutionAILanding() {
                 ))}
               </ul>
             </div>
-            <div className="panel orbit p-4 sm:p-7" style={{ boxShadow: "0 30px 100px -50px rgba(77,212,231,.5)" }}>
+            <div id="audit-form" className="panel orbit p-3 sm:p-7" style={{ boxShadow: "0 30px 100px -50px rgba(77,212,231,.5)" }}>
               <div className="trust"><img src="/img/icons/shield.webp" alt="" width="44" height="44" loading="lazy" /><span><b>Free, 30 minutes, no obligation.</b><br />No long-term contract if you go ahead.</span></div>
+              <ol className="next">
+                <li><span><b>Send this form.</b> It takes about a minute.</span></li>
+                <li><span><b>We reach out to set a time</b> for your 30-minute audit call.</span></li>
+                <li><span><b>You get your audit and ROI projection.</b> Then you decide.</span></li>
+              </ol>
               <p className="text-xs mb-4 leading-relaxed" style={{ color: c.muted }}>
                 By submitting, you agree to our{" "}
                 <Link to="/privacy" className="underline" style={{ color: c.cyan }}>Privacy Policy</Link>{" "}and{" "}
-                <Link to="/terms" className="underline" style={{ color: c.cyan }}>Terms of Service</Link>. Message and data rates may apply for SMS.
+                <Link to="/terms" className="underline" style={{ color: c.cyan }}>Terms of Service</Link>. Text messages are optional: you choose with the checkboxes in the form.
               </p>
-              <div className="w-full overflow-hidden" style={{ minHeight: `${iframeHeight}px` }}>
+              <div className="formclip">
                 <iframe
                   src={`https://api.leadconnectorhq.com/widget/form/${FORM_ID}`}
-                  style={{ width: "100%", height: `${iframeHeight}px`, border: "none", borderRadius: "12px" }}
+                  style={{ height: `${iframeHeight}px`, border: "none" }}
                   id={`inline-${FORM_ID}`}
                   data-layout="{'id':'INLINE'}"
                   data-trigger-type="alwaysShow"
@@ -1214,6 +1284,8 @@ export default function RevolutionAILanding() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ChatLauncher />
 
       {/* Footer */}
       <footer className="foot">
