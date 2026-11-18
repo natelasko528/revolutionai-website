@@ -24,3 +24,5 @@ iframe[id^="inline-"] {
 html { scroll-behavior: smooth; scroll-padding-top: 76px; }
 
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+@media (max-width: 767px) { html { scroll-padding-bottom: 96px; } }
