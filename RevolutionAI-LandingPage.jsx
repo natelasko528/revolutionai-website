@@ -254,7 +254,7 @@ const spotlight = (e) => {
 };
 
 /* Sample call for the voice agent tile. Audio is AI-generated; captions follow the recording. */
-const CUES = [{"who": "Caller", "text": "Hi, my AC quit and it's ninety degrees in here.", "start": 0.25, "end": 3.91}, {"who": "Agent", "text": "Sorry about that. I can get a tech out today. What's the address?", "start": 4.36, "end": 8.74}, {"who": "Caller", "text": "1420 Oak Street.", "start": 9.19, "end": 11.45}, {"who": "Agent", "text": "Thanks. I have 2 to 4 this afternoon. Want me to book it?", "start": 11.9, "end": 16.26}, {"who": "Caller", "text": "Yes, please.", "start": 16.71, "end": 18.41}, {"who": "Agent", "text": "Done. A confirmation text is on its way to you now.", "start": 18.86, "end": 22.71}];
+const CUES = [{"who": "Caller", "text": "Hi, um, my AC just quit and it's like ninety degrees in here.", "start": 0.3, "end": 5.38}, {"who": "Agent", "text": "Oh no, sorry about that. I can get a tech out to you today. What's the address?", "start": 5.7, "end": 10.58}, {"who": "Caller", "text": "It's 1420 Oak Street.", "start": 10.9, "end": 12.76}, {"who": "Agent", "text": "Got it, thanks. I have two to four this afternoon. Want me to book it?", "start": 13.08, "end": 16.42}, {"who": "Caller", "text": "Yes, please. That'd be great.", "start": 16.74, "end": 18.25}, {"who": "Agent", "text": "You're all set. You'll get a confirmation text in just a second.", "start": 18.57, "end": 21.49}];
 
 function VoiceDemo() {
   const audio = useRef(null);
@@ -298,9 +298,9 @@ function VoiceDemo() {
               <ul className="voice-script">{CUES.map((q) => <li key={q.start}><b style={{ color: q.who === "Agent" ? c.cyan : c.gold }}>{q.who}:</b> {q.text}</li>)}</ul>
             </div>
           ) : cue ? <p><b style={{ color: cue.who === "Agent" ? c.cyan : c.gold }}>{cue.who}:</b> {cue.text}</p>
-            : <p>{status === "loading" ? "Fetching the recording…" : "23 seconds. Turn your sound on."}</p>}
+            : <p>{status === "loading" ? "Fetching the recording…" : "22 seconds. Turn your sound on."}</p>}
         </div>
-        <p className="voice-note">Scripted sample. Both voices are AI text-to-speech, not a recording of a live call.</p>
+        <p className="voice-note">Scripted sample. Both voices are AI-generated, not a recording of a live call.</p>
       </div>
     </div>
   );
