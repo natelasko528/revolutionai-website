@@ -5,6 +5,7 @@ import {
   useMotionValue, useMotionValueEvent, useInView, animate,
 } from "framer-motion";
 import {
+  ArrowRight, ArrowDown, Pause,
   PhoneMissed, MessageSquare, PhoneCall, CalendarCheck, Star, Workflow, BarChart3,
   Menu, X, Plus, Check, RotateCcw, Voicemail, PhoneOff, Send, BellRing,
   ChevronLeft, Signal, Wifi, BatteryFull, Flame, Droplets, CloudRain, Play, Square,
@@ -86,14 +87,44 @@ const PROOF = [
   },
 ];
 
+/* Trade-specific pains. Picking a trade also sets the calculator and, where one exists, the hero call. */
+const TRADES = [
+  { id: "hvac", name: "HVAC", scn: "heat", scene: "No-heat and no-cool calls come in at night and on weekends", quote: "Replacement quotes", after: "Tune-up customers drift off between seasons", afterFix: "Seasonal tune-up reminders and review requests go out on their own." },
+  { id: "plumbing", name: "Plumbing", scn: "drain", scene: "Emergency calls come in while you're under a sink", quote: "Water heater and repipe quotes", after: "One-time customers never hear from you again", afterFix: "Past customers get a check-in and a review request without anyone remembering to send it." },
+  { id: "roofing", name: "Roofing", scn: "roof", scene: "After a storm the phone rings faster than anyone can answer", quote: "Inspection requests and estimates", after: "Finished roofs never turn into reviews or referrals", afterFix: "Every finished job triggers a review request and a referral ask." },
+  { id: "electrical", name: "Electrical", scene: "Calls come in while you're in a panel or a crawl space", quote: "Panel upgrade and EV charger quotes", after: "Small jobs never become repeat customers", afterFix: "Past customers hear from you when it's time for the next project." },
+  { id: "remodeling", name: "Remodeling", scene: "Big-ticket inquiries land while you're on a job site", quote: "Kitchen and bath estimates", after: "Long sales cycles stall after the first meeting", afterFix: "Follow-up keeps running for weeks, so the estimate stays alive." },
+  { id: "landscaping", name: "Landscaping", scene: "Spring calls stack up faster than you can return them", quote: "Design and install quotes", after: "Seasonal customers forget to rebook", afterFix: "Renewal reminders go out before each season starts." },
+  { id: "cleaning", name: "Cleaning", scene: "New inquiries arrive while every crew is in a home", quote: "Quote requests", after: "First-time customers don't become recurring ones", afterFix: "A rebooking offer and a review request follow every first clean." },
+  { id: "pest", name: "Pest control", scene: "Urgent calls come in after hours", quote: "Inspection requests", after: "Service plans lapse without a reminder", afterFix: "Renewal reminders and review requests run automatically." },
+  { id: "", name: "Another trade", scene: "Calls come in while you're with a customer", quote: "Quote requests", after: "Finished jobs don't turn into reviews or repeat work", afterFix: "Review requests and check-ins go out on their own after every job." },
+];
+
+const pains = (t) => [
+  { pain: `${t.scene}, and nobody can pick up.`, fix: "The caller gets a text from your number in seconds and is booked before they try the next company.", tool: "Missed-call text-back and AI voice agent" },
+  { pain: `${t.quote} sit unanswered until you're back at a desk.`, fix: "Every form, ad and directory lead gets a reply right away, then follow-up until they answer.", tool: "Instant lead response" },
+  { pain: `${t.after}.`, fix: t.afterFix, tool: "Reviews and repeat work" },
+];
+
+/* General comparison of typical options, not a claim about any specific vendor. */
+const OPTIONS = ["Do it yourself with software", "Hire front-office help", "RevolutionAI"];
+const COMPARE = [
+  ["Who sets it up", "You do", "You train them", "We do, start to finish"],
+  ["Answers nights and weekends", "Only if you build it", "During their shift", "Yes, every call and form"],
+  ["Follows up until the lead books", "If you write every sequence", "When there's time", "Yes, automatically"],
+  ["Asks every customer for a review", "If you set it up", "When someone remembers", "Yes, after every job"],
+  ["Your time each week", "Hours of upkeep", "Managing a person", "A glance at the app"],
+  ["Commitment", "Software subscription", "Payroll", "No long-term contract"],
+];
+
 const BUILDS = [
-  { id: "textback", icon: PhoneMissed, title: "Missed-call text-back", desc: "When you can't pick up, the caller gets a text from your number within seconds, and the conversation keeps going until they're booked." },
-  { id: "voice", icon: PhoneCall, title: "AI voice agent", desc: "Answers the phone after hours, asks the questions you'd ask, and hands hot jobs to you." },
-  { id: "booking", icon: CalendarCheck, title: "Booking and reminders", desc: "Customers pick a time in a couple of taps. Confirmations and reminders cut down on no-shows." },
-  { id: "lead", icon: MessageSquare, title: "Instant lead response", desc: "Web forms, ads and directory leads get a text and an email right away, then steady follow-up." },
-  { id: "reviews", icon: Star, title: "Reviews and repeat work", desc: "Finished jobs trigger a review request. Past customers get a nudge when it's time." },
-  { id: "pipeline", icon: Workflow, title: "Pipeline that updates itself", desc: "Every lead lands in the right stage with a task, so nothing depends on memory." },
-  { id: "report", icon: BarChart3, title: "Plain reporting", desc: "Where leads came from, how fast they were answered, how many booked, how many closed." },
+  { id: "textback", solves: "For calls you can't answer on the job", icon: PhoneMissed, title: "Missed-call text-back", desc: "When you can't pick up, the caller gets a text from your number within seconds, and the conversation keeps going until they're booked." },
+  { id: "voice", solves: "For after-hours and overflow calls", icon: PhoneCall, title: "AI voice agent", desc: "Answers the phone after hours, asks the questions you'd ask, and hands hot jobs to you." },
+  { id: "booking", solves: "For phone tag and no-shows", icon: CalendarCheck, title: "Booking and reminders", desc: "Customers pick a time in a couple of taps. Confirmations and reminders cut down on no-shows." },
+  { id: "lead", solves: "For web leads that go cold", icon: MessageSquare, title: "Instant lead response", desc: "Web forms, ads and directory leads get a text and an email right away, then steady follow-up." },
+  { id: "reviews", solves: "For happy customers who never post", icon: Star, title: "Reviews and repeat work", desc: "Finished jobs trigger a review request. Past customers get a nudge when it's time." },
+  { id: "pipeline", solves: "For estimates that slip through the cracks", icon: Workflow, title: "Pipeline that updates itself", desc: "Every lead lands in the right stage with a task, so nothing depends on memory." },
+  { id: "report", solves: "For guessing at what's working", icon: BarChart3, title: "Plain reporting", desc: "Where leads came from, how fast they were answered, how many booked, how many closed." },
 ];
 
 /* Illustrative side-by-side. Times are an example, not measured results. */
@@ -247,39 +278,36 @@ const spotlight = (e) => {
   e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
 };
 
-/* Sample script for the voice agent tile. Shown as captions, no audio. */
-const CALL = [
-  ["Caller", "Hi, my AC quit and it's ninety degrees in here."],
-  ["Agent", "Sorry about that. I can get a tech out today. What's the address?"],
-  ["Caller", "1420 Oak Street."],
-  ["Agent", "Thanks. I have 2 to 4 this afternoon. Want me to book it?"],
-  ["Caller", "Yes, please."],
-  ["Agent", "Done. A confirmation text is on its way to you now."],
-];
+/* Sample call for the voice agent tile. Audio is AI-generated; captions follow the recording. */
+const CUES = [{"who": "Caller", "text": "Hi, my AC quit and it's ninety degrees in here.", "start": 0.25, "end": 3.91}, {"who": "Agent", "text": "Sorry about that. I can get a tech out today. What's the address?", "start": 4.36, "end": 8.74}, {"who": "Caller", "text": "1420 Oak Street.", "start": 9.19, "end": 11.45}, {"who": "Agent", "text": "Thanks. I have 2 to 4 this afternoon. Want me to book it?", "start": 11.9, "end": 16.26}, {"who": "Caller", "text": "Yes, please.", "start": 16.71, "end": 18.41}, {"who": "Agent", "text": "Done. A confirmation text is on its way to you now.", "start": 18.86, "end": 22.71}];
 
 function VoiceDemo() {
-  const [i, setI] = useState(-1);
-  const playing = i >= 0;
-  useEffect(() => {
-    if (!playing) return;
-    const t = setTimeout(() => setI((n) => (n + 1 >= CALL.length ? -1 : n + 1)), 2300);
-    return () => clearTimeout(t);
-  }, [i, playing]);
+  const audio = useRef(null);
+  const [playing, setPlaying] = useState(false);
+  const [t, setT] = useState(0);
+  const [dur, setDur] = useState(CUES[CUES.length - 1].end);
+  const cue = CUES.find((q) => t >= q.start - 0.15 && t <= q.end + 0.3);
+  const toggle = () => {
+    const el = audio.current;
+    if (!el) return;
+    if (el.paused) el.play().catch(() => setPlaying(false)); else el.pause();
+  };
   return (
     <div className="vg voice">
+      <audio ref={audio} src="/audio/sample-call.mp3" preload="none"
+        onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)}
+        onEnded={() => { setPlaying(false); setT(0); }}
+        onLoadedMetadata={(e) => setDur(e.currentTarget.duration || dur)}
+        onTimeUpdate={(e) => setT(e.currentTarget.currentTime)} />
       <div className={`vg-wave ${playing ? "live" : ""}`} aria-hidden="true">{Array.from({ length: 28 }).map((_, k) => <i key={k} style={{ animationDelay: `${(k % 7) * 0.12}s`, height: `${28 + ((k * 37) % 60)}%` }} />)}</div>
+      <div className="voice-bar" aria-hidden="true"><i style={{ width: `${Math.min(100, (t / dur) * 100)}%` }} /></div>
       <div className="voice-row">
-        <button type="button" className="voice-btn" onClick={() => setI(playing ? -1 : 0)}>
-          {playing ? <Square size={13} fill="currentColor" /> : <Play size={14} fill="currentColor" />}{playing ? "Stop" : "Play a sample call"}
+        <button type="button" className="voice-btn" onClick={toggle} aria-pressed={playing}>
+          {playing ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}{playing ? "Pause" : t > 0 ? "Resume" : "Hear a sample call"}
         </button>
         <p className="voice-cap" aria-live="polite">
-          <AnimatePresence mode="wait">
-            {playing ? (
-              <motion.span key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }}>
-                <b style={{ color: CALL[i][0] === "Agent" ? c.cyan : c.gold }}>{CALL[i][0]}:</b> {CALL[i][1]}
-              </motion.span>
-            ) : <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>Sample script, shown as captions.</motion.span>}
-          </AnimatePresence>
+          {cue ? <span><b style={{ color: cue.who === "Agent" ? c.cyan : c.gold }}>{cue.who}:</b> {cue.text}</span>
+            : <span>23 seconds, sound on. Sample call with AI-generated voices.</span>}
         </p>
       </div>
     </div>
@@ -340,16 +368,20 @@ function Vignette({ id }) {
   return null;
 }
 
-function PhoneDemo() {
+function PhoneDemo({ sid, onPick }) {
   const reduce = useReducedMotion();
-  const [sid, setSid] = useState(SCENARIOS[0].id);
   const sc = SCENARIOS.find((s) => s.id === sid);
   const thread = sc.thread;
   const [shown, setShown] = useState(reduce ? thread.length : 1);
   const scroller = useRef(null);
   const done = shown >= thread.length;
 
-  const pick = (id) => { setSid(id); setShown(reduce ? SCENARIOS.find((s) => s.id === id).thread.length : 1); };
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) { first.current = false; return; }
+    setShown(reduce ? thread.length : 1);
+  }, [sid]);
+  const pick = onPick;
 
   useEffect(() => {
     if (reduce || done) return;
@@ -432,6 +464,9 @@ export default function RevolutionAILanding() {
   const [mode, setMode] = useState("without");
   const [step, setStep] = useState(0);
   const [spy, setSpy] = useState("");
+  const [sid, setSid] = useState(SCENARIOS[0].id);
+  const [tradeId, setTradeId] = useState("hvac");
+  const trade = TRADES.find((t) => t.id === tradeId);
 
   useEffect(() => {
     const els = NAV.map(([, id]) => document.getElementById(id)).filter(Boolean);
@@ -493,6 +528,12 @@ export default function RevolutionAILanding() {
     setIndustryId(id);
     const ind = INDUSTRIES.find((i) => i.id === id);
     if (ind) setVals((p) => ({ ...p, avgTicket: ind.avgTicket }));
+  };
+
+  const pickTrade = (t) => {
+    setTradeId(t.id);
+    if (t.scn) setSid(t.scn);
+    if (t.id) pickIndustry(t.id);
   };
 
   const industry = INDUSTRIES.find((i) => i.id === industryId);
@@ -657,6 +698,41 @@ export default function RevolutionAILanding() {
         .foot-base { display: grid; gap: 8px; }
         @media (max-width: 859px) { .foot-base { padding-right: 84px; } }
         .foot-mega { font-weight: 800; font-size: 9.4vw; line-height: .8; white-space: nowrap; text-align: center; margin: 6px 0 -0.12em; color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,.16); background: linear-gradient(180deg, rgba(77,212,231,.22), transparent 85%); -webkit-background-clip: text; background-clip: text; -webkit-mask-image: linear-gradient(180deg, #000 20%, transparent 95%); mask-image: linear-gradient(180deg, #000 20%, transparent 95%); user-select: none; }
+        .site { overflow-x: clip; }
+        .scn { width: 100%; max-width: 348px; } .scn button { flex: 1 1 auto; padding: 8px 8px; } .scn-label { justify-content: center; width: 100%; }
+        @media (max-width: 420px) { .scn button { font-size: .76rem; } .scn-label svg { display: none; } }
+        .foot-brand { flex-wrap: wrap; } .foot-brand > div { min-width: 0; flex: 1 1 180px; }
+        @media (max-width: 480px) { .foot-brand { gap: 16px; } .foot-brand img { width: 76px; height: 76px; } .foot-word { font-size: clamp(1.45rem, 7.4vw, 2rem); } }
+        .solves { display: inline-block; margin: 12px 0 8px; padding: 4px 10px; border-radius: 999px; font-size: .76rem; font-weight: 700; color: ${c.gold}; background: rgba(245,166,35,.1); }
+        .tile .tile-copy h3 { margin-top: 0; }
+        .leaks { display: grid; gap: 14px; }
+        .leaks li { display: grid; gap: 10px; align-items: stretch; }
+        @media (min-width: 768px) { .leaks li { grid-template-columns: 1fr 44px 1.15fr; gap: 0; } }
+        .leak, .plug { border-radius: 18px; padding: 20px 22px; border: 1px solid ${c.line}; background: ${c.surface}; }
+        .leak { border-color: rgba(255,120,100,.28); background: linear-gradient(180deg, rgba(255,120,100,.07), ${c.surface} 70%); }
+        .plug { border-color: rgba(77,212,231,.4); background: linear-gradient(180deg, rgba(77,212,231,.1), ${c.surface} 70%); }
+        .leaks .tag { display: block; font-size: .76rem; font-weight: 700; margin-bottom: 6px; }
+        .leak .tag { color: #FF9A8B; } .plug .tag { color: ${c.cyan}; }
+        .leaks p { font-size: 1.04rem; line-height: 1.45; font-weight: 500; }
+        .plug small { display: block; margin-top: 10px; font-size: .8rem; color: ${c.gold}; font-weight: 600; }
+        .leak-arrow { display: grid; place-items: center; color: ${c.muted}; }
+        .vs { border: 1px solid ${c.line}; border-radius: 22px; overflow: hidden; background: ${c.surface}; }
+        .vs-head, .vs-row { display: grid; grid-template-columns: 1.1fr 1fr 1fr 1.15fr; }
+        .vs-head span { padding: 18px 18px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: .98rem; line-height: 1.2; }
+        .vs-row span { padding: 16px 18px; border-top: 1px solid ${c.line}; font-size: .95rem; line-height: 1.4; color: ${c.muted}; }
+        .vs-row .vs-label { color: ${c.text}; font-weight: 600; }
+        .vs .us { background: rgba(77,212,231,.09); color: ${c.text}; font-weight: 600; }
+        .vs-head .us { color: ${c.cyan}; }
+        .vs-row .us { display: flex; align-items: flex-start; gap: 8px; } .vs-row .us svg { color: ${c.cyan}; flex: none; margin-top: 3px; }
+        @media (max-width: 767px) {
+          .vs-head { display: none; }
+          .vs-row { grid-template-columns: 1fr; padding: 16px 16px 14px; border-top: 1px solid ${c.line}; } .vs-row:first-of-type { border-top: 0; }
+          .vs-row span { padding: 0; border: 0; }
+          .vs-row .vs-label { font-size: 1.02rem; margin-bottom: 8px; }
+          .vs-row [data-col] { padding: 7px 0; } .vs-row [data-col]::before { content: attr(data-col); display: block; font-size: .72rem; font-weight: 600; color: ${c.muted}; opacity: .8; }
+          .vs-row .us { display: block; margin-top: 6px; padding: 10px 12px; border-radius: 12px; } .vs-row .us svg { display: none; } .vs-row .us::before { color: ${c.cyan}; opacity: 1; }
+        }
+        .voice-bar { height: 4px; border-radius: 2px; background: rgba(255,255,255,.12); overflow: hidden; } .voice-bar i { display: block; height: 100%; background: ${c.cyan}; transition: width .25s linear; }
         @property --ang { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
         @keyframes spin-ang { to { --ang: 360deg; } }
         .orbit { position: relative; }
@@ -803,20 +879,50 @@ export default function RevolutionAILanding() {
               </motion.div>
             </div>
             <motion.div initial={reduce ? false : { opacity: 0, y: 40, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.9, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}>
-              <PhoneDemo />
+              <PhoneDemo sid={sid} onPick={setSid} />
             </motion.div>
           </div>
         </section>
 
-        {/* Trades ticker */}
-        <div className="ticker band-alt" aria-label="Trades we work with">
-          <div className="ticker-track">
-            {[0, 1].map((k) => INDUSTRIES.slice(0, 12).map((i) => <span key={k + i.id} aria-hidden={k === 1}>{i.name}</span>))}
+        {/* Pains by trade */}
+        <section id="pains" className="band band-alt" aria-labelledby="pains-h">
+          <div className="wrap">
+            <Reveal className="grid lg:grid-cols-2 gap-6 lg:gap-10 items-end mb-8">
+              <h2 id="pains-h" className="h2">Good work isn't the problem. The leaks are.</h2>
+              <p className="lede">Most home service businesses lose jobs in the same three places. Pick your trade to see where, and what closes each gap.</p>
+            </Reveal>
+            <div className="chips mb-8" role="group" aria-label="Choose your trade">
+              {TRADES.map((t) => (
+                <motion.button whileTap={{ scale: 0.94 }} type="button" key={t.name} className="chip" aria-pressed={tradeId === t.id} onClick={() => pickTrade(t)}>{t.name}</motion.button>
+              ))}
+            </div>
+            <AnimatePresence mode="wait">
+              <motion.ol key={tradeId} className="leaks" initial="hidden" animate="show" exit={{ opacity: 0, transition: { duration: 0.12 } }} variants={{ show: { transition: { staggerChildren: 0.12 } } }} aria-live="polite">
+                {pains(trade).map((r, i) => (
+                  <motion.li key={i} variants={{ hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } }}>
+                    <div className="leak">
+                      <span className="tag">The leak</span>
+                      <p>{r.pain}</p>
+                    </div>
+                    <span className="leak-arrow" aria-hidden="true"><ArrowRight size={20} className="hidden md:block" /><ArrowDown size={20} className="md:hidden" /></span>
+                    <div className="plug">
+                      <span className="tag">The fix</span>
+                      <p>{r.fix}</p>
+                      <small>{r.tool}</small>
+                    </div>
+                  </motion.li>
+                ))}
+              </motion.ol>
+            </AnimatePresence>
+            <div className="mt-9 flex flex-wrap items-center gap-x-5 gap-y-3">
+              <button onClick={() => scrollTo("contact")} className="btn btn-main">Find my leaks, free</button>
+              <button onClick={() => scrollTo("calculator")} className="btn btn-ghost">See what they cost</button>
+            </div>
           </div>
-        </div>
+        </section>
 
         {/* Proof */}
-        <section className="band-alt" aria-labelledby="proof-h" style={{ borderTop: 0 }}>
+        <section aria-labelledby="proof-h">
           <div className="wrap" style={{ paddingTop: 56, paddingBottom: 56 }}>
             <Reveal><h2 id="proof-h" className="text-xl font-bold mb-8">Why the first few minutes decide who gets the job</h2></Reveal>
             <div className="proof">
@@ -834,7 +940,7 @@ export default function RevolutionAILanding() {
         </section>
 
         {/* Same call, two outcomes */}
-        <section className="band" aria-labelledby="two-h">
+        <section className="band band-alt" aria-labelledby="two-h">
           <div className="wrap grid grid-cols-1 lg:grid-cols-[.9fr_1.1fr] gap-10 lg:gap-14 items-stretch">
             <Reveal as="figure" className="shot">
               <motion.img ref={shotRef} style={{ y: shotY }} src="/img/roofer-at-work.jpg" alt="A roofer nailing shingles at sunset while his phone lights up beside him on the roof." width="1200" height="800" loading="lazy" />
@@ -878,10 +984,10 @@ export default function RevolutionAILanding() {
         </section>
 
         {/* What we build */}
-        <section id="solutions" className="band band-alt">
+        <section id="solutions" className="band">
           <div className="wrap">
             <Reveal className="grid lg:grid-cols-2 gap-6 lg:gap-10 items-end mb-10">
-              <h2 className="h2">Everything between "new lead" and "paid job," handled.</h2>
+              <h2 className="h2">Seven pieces. Each one closes a specific leak.</h2>
               <p className="lede">If it's repetitive, easy to forget, or happens while you're on a job, it belongs in the system. We build it, write it, connect it and keep improving it. Tap around: a few of these are live.</p>
             </Reveal>
             <ul className="bento">
@@ -889,13 +995,46 @@ export default function RevolutionAILanding() {
                 <Reveal as="li" key={b.id} delay={(i % 3) * 0.08} className={`tile orbit tile-${b.id}`} onMouseMove={spotlight}>
                   <div className="tile-copy">
                     <img className="art" src={`/img/icons/${b.id}.webp`} alt="" width="68" height="68" loading="lazy" />
-                    <h3 className="font-bold text-[1.15rem] mt-4">{b.title}</h3>
+                    <p className="solves">{b.solves}</p>
+                    <h3 className="font-bold text-[1.15rem]">{b.title}</h3>
                     <p className="mt-1.5 text-[.95rem] leading-relaxed" style={{ color: c.muted }}>{b.desc}</p>
                   </div>
                   <Vignette id={b.id} />
                 </Reveal>
               ))}
             </ul>
+            <div className="mt-9 flex flex-wrap items-center gap-x-5 gap-y-3">
+              <button onClick={() => scrollTo("contact")} className="btn btn-main">Get all seven built for me</button>
+              <span className="text-sm" style={{ color: c.muted }}>You don't pick and assemble. We set up what your business needs.</span>
+            </div>
+          </div>
+        </section>
+
+        {/* Options compared */}
+        <section className="band band-alt" aria-labelledby="cmp-h">
+          <div className="wrap">
+            <Reveal className="grid lg:grid-cols-2 gap-6 lg:gap-10 items-end mb-10">
+              <h2 id="cmp-h" className="h2">Three ways to fix it. Only one stays off your plate.</h2>
+              <p className="lede">You can buy software and build it yourself, or hire someone to chase leads. Or you can hand the whole thing to us and keep doing the work you're good at.</p>
+            </Reveal>
+            <Reveal className="vs" role="table" aria-label="Comparison of typical options">
+              <div className="vs-head" role="row">
+                <span role="columnheader" />
+                {OPTIONS.map((o, i) => <span role="columnheader" key={o} className={i === 2 ? "us" : ""}>{o}</span>)}
+              </div>
+              {COMPARE.map(([label, a, b, us]) => (
+                <div className="vs-row" role="row" key={label}>
+                  <span role="rowheader" className="vs-label">{label}</span>
+                  <span role="cell" data-col={OPTIONS[0]}>{a}</span>
+                  <span role="cell" data-col={OPTIONS[1]}>{b}</span>
+                  <span role="cell" data-col={OPTIONS[2]} className="us"><Check size={16} />{us}</span>
+                </div>
+              ))}
+            </Reveal>
+            <div className="mt-9 flex flex-wrap items-center gap-x-5 gap-y-3">
+              <button onClick={() => scrollTo("contact")} className="btn btn-main">Hand it to us</button>
+              <span className="text-sm" style={{ color: c.muted }}>A general comparison of typical options. Your audit looks at your actual setup.</span>
+            </div>
           </div>
         </section>
 
@@ -928,7 +1067,7 @@ export default function RevolutionAILanding() {
         <section id="calculator" className="band band-alt">
           <div className="wrap">
             <Reveal className="grid lg:grid-cols-2 gap-10 items-end mb-10">
-              <h2 className="h2">Run your own numbers.</h2>
+              <h2 className="h2">What are the leaks costing you?</h2>
               <p className="lede">Pick your trade, slide in what a normal month looks like, and watch what faster follow-up could be worth. No email needed.</p>
             </Reveal>
             <Reveal className="mb-8">
@@ -993,7 +1132,7 @@ export default function RevolutionAILanding() {
                     <div style={{ borderBottom: `1px solid ${c.line}` }} className="px-3">
                       <h3 style={{ fontFamily: "inherit", letterSpacing: 0 }}>
                         <button onClick={() => setOpenFaq(open ? null : i)} aria-expanded={open} aria-controls={`faq-${i}`} className="w-full py-5 flex items-center justify-between gap-6 text-left text-[1.05rem] font-semibold">
-                          {f.q}
+                          <span className="min-w-0 flex-1">{f.q}</span>
                           <Plus size={20} className="faq-plus shrink-0" style={{ color: c.muted }} />
                         </button>
                       </h3>
